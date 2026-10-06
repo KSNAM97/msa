@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - argo.aws-esk.com
-    secretName: argo-aws-esk-com-tls
+      - argo.ksnam97.com
+    secretName: argo-ksnam97-com-tls
   rules:
-  - host: argo.aws-esk.com
+  - host: argo.ksnam97.com
     http:
       paths:
         - path: /
