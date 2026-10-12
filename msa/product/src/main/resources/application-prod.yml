@@ -29,4 +29,4 @@ cloud:
     region:
       static: ap-northeast-2
     s3:
-      bucket: ksnam97-frontend-image-872792314844-ap-northeast-2-an
+      bucket: ksnam97-frontend-image-872792314844-ap-northeast-2

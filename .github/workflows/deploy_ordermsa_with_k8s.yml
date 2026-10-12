@@ -1,6 +1,7 @@
 name: deploy order order-backend
 
 on:
+  workflow_dispatch:  # 수동 실행 시 전체 서비스 빌드·배포
   push:
     branches:
       - main
@@ -54,6 +55,7 @@ jobs:
       # 변경된 폴더 감지
       - name: detect changed services
         id: changes
+        if: github.event_name != 'workflow_dispatch'
 
         # dorny/paths-filter@v3
         # push에서 변경된 파일 목록을 분석 지정한 경로에 변경이 있으면 true/false 자동 생성
@@ -78,6 +80,7 @@ jobs:
         # 모든 서비스가 false일 경우 실행
         # 불필요한 docker build 방지
         if: |
+          github.event_name != 'workflow_dispatch' &&
           steps.changes.outputs.gateway != 'true' &&
           steps.changes.outputs.member != 'true' &&
           steps.changes.outputs.ordering != 'true' &&
@@ -90,7 +93,7 @@ jobs:
 
       # Gateway 빌드
       - name: gateway build and push docker image to ecr
-        if: steps.changes.outputs.gateway == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.gateway == 'true'
         env:         
           REGISTRY: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com
           REPOSITORY: apigateway
@@ -102,7 +105,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: deploy gateway
-        if: steps.changes.outputs.gateway == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.gateway == 'true'
         run: |
           kubectl apply -f ./msa/apigateway/k8s/depl_svc.yml
           kubectl rollout restart deployment apigateway-depl -n soldesk
@@ -110,7 +113,7 @@ jobs:
 
       # Member 빌드
       - name: member build and push docker image to ecr
-        if: steps.changes.outputs.member == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.member == 'true'
         env:
           REGISTRY: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com
           REPOSITORY: member-service
@@ -122,7 +125,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: deploy member
-        if: steps.changes.outputs.member == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.member == 'true'
         run: |
           kubectl apply -f ./msa/member/k8s/depl_svc.yml
           kubectl rollout restart deployment member-depl -n soldesk
@@ -130,7 +133,7 @@ jobs:
 
       # Ordering 빌드
       - name: order build and push docker image to ecr
-        if: steps.changes.outputs.ordering == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.ordering == 'true'
         env:
           REGISTRY: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com
           REPOSITORY: ordering-service
@@ -142,7 +145,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: deploy ordering
-        if: steps.changes.outputs.ordering == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.ordering == 'true'
         run: | 
           kubectl apply -f ./msa/ordering/k8s/depl_svc.yml
           kubectl rollout restart deployment ordering-depl -n soldesk
@@ -150,7 +153,7 @@ jobs:
 
       # Product 빌드
       - name: product build and push docker image to ecr
-        if: steps.changes.outputs.product == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.product == 'true'
         env:
           REGISTRY: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com
           REPOSITORY: product-service
@@ -162,14 +165,14 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: deploy product
-        if: steps.changes.outputs.product == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.product == 'true'
         run: |
           kubectl apply -f ./msa/product/k8s/depl_svc.yml
           kubectl rollout restart deployment product-depl -n soldesk
 
       # Frontend 빌드
       - name: frontend build and push docker image to ecr
-        if: steps.changes.outputs.frontend == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
         env:
           REGISTRY: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com
           REPOSITORY: frontend-service
@@ -181,7 +184,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: deploy frontend
-        if: steps.changes.outputs.frontend == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
         run: |
           kubectl apply -f ./msa/frontend/k8s/depl_svc.yml
           kubectl rollout restart deployment frontend-depl -n soldesk
