@@ -33,6 +33,12 @@
 
     document.getElementById('productForm').addEventListener('submit', async function (e) {
       e.preventDefault();
+      // 중복 등록 방지: 요청이 끝날 때까지 버튼을 잠그고 진행 중임을 표시한다.
+      // (이미지 업로드는 몇 초 걸려서, 잠그지 않으면 여러 번 눌러 같은 상품이 여러 개 등록된다)
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      submitBtn.textContent = '등록 중...';
       const v = function (id) { return document.getElementById(id).value; };
       // 이미지 업로드이므로 multipart/form-data (FormData). product-service 가 S3 에 저장하고 URL 을 DB 에 기록
       const fd = new FormData();
@@ -40,9 +46,13 @@
       fd.append('imageFile', document.getElementById('imageFile').files[0]);
       try {
         await apiRequest('/product-service/product/create', { method: 'POST', body: fd });
+        // 성공하면 버튼을 다시 풀지 않는다(메인으로 이동하는 동안 재클릭 방지)
         showMessage('productMessage', '상품이 등록되었습니다.', 'success');
         setTimeout(function () { window.location.href = '/'; }, 700);
       } catch (err) {
+        // 실패했을 때만 버튼을 풀어서 다시 시도할 수 있게 한다
+        submitBtn.disabled = false;
+        submitBtn.textContent = '등록하기';
         showMessage('productMessage', '등록에 실패했습니다. 입력값과 로그인 상태를 확인해주세요.', 'error');
       }
     });

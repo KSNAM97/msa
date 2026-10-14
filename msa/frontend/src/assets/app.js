@@ -297,19 +297,39 @@ async function loadProducts() {
   list.innerHTML = shown.length ? shown.map(function (p) {
     const flag = p.stockQuantity < 1 ? '<span class="flag soldout">SOLD OUT</span>' : (p.stockQuantity < 6 ? '<span class="flag">잔여 ' + p.stockQuantity + '개</span>' : '');
     return '<article class="card"><div class="meta"><div class="brand">' + esc(p.category || 'NAM97') + '</div>' +
-      '<a class="name" href="/product-detail.html?id=' + p.id + '">' + esc(p.name) + '</a><div class="price">' + formatPrice(p.price) + '</div></div>' +
+      '<a class="name" href="/product-detail.html?id=' + p.id + '">' + esc(p.name) + '</a><div class="price">' + formatPrice(p.price) + '</div>' +
+      (isAdmin() ? '<button class="admin-del" type="button" data-del="' + p.id + '">삭제</button>' : '') + '</div>' +   // 관리자에게만 보이는 삭제 버튼
       '<a class="thumb" href="/product-detail.html?id=' + p.id + '"><img loading="lazy" src="' + esc(getImageUrl(p.imageUrl)) + '" alt="' + esc(p.name) + '">' + flag +
       '<button class="quick" type="button" data-add="' + p.id + '"' + (p.stockQuantity < 1 ? ' disabled' : '') + '>ADD TO CART</button></a></article>';
   }).join('') : '<div class="empty">조건에 맞는 상품이 없습니다.</div>';
 
   // 목록에서 바로 담기 (수량 1). 버튼이 링크(a) 안에 있으므로 기본 이동을 막는다
   list.onclick = function (e) {
+    const d = e.target.closest('button[data-del]');
+    if (d) {   // 관리자 삭제: 확인 후 DELETE 호출, 성공하면 카드를 화면에서 제거
+      const id = Number(d.dataset.del), p = products.find(function (x) { return x.id === id; });
+      deleteProduct(id, p ? p.name : '', function () { d.closest('.card').remove(); });
+      return;
+    }
     const b = e.target.closest('button[data-add]');
     if (!b) return;
     e.preventDefault();
     addToCart(products.find(function (p) { return p.id === Number(b.dataset.add); }), 1);
     toast('장바구니에 담았습니다.', '/cart.html', '장바구니 보기');
   };
+}
+
+// 상품 삭제 (관리자). 서버도 ADMIN 이 아니면 403 으로 거절한다. 성공하면 onDone 콜백 실행
+async function deleteProduct(id, name, onDone) {
+  if (!confirm('"' + name + '" 상품을 삭제할까요? 되돌릴 수 없습니다.')) return;
+  try {
+    await apiRequest('/product-service/product/' + id, { method: 'DELETE' });
+    _productsPromise = null;   // 상품 목록 캐시 무효화 (헤더 카테고리 메뉴 등이 다시 조회하도록)
+    toast('삭제했습니다.');
+    if (onDone) onDone();
+  } catch (e) {
+    toast('삭제하지 못했습니다. 관리자 로그인 상태를 확인해주세요.');
+  }
 }
 
 // 상세: 수량 선택 + 장바구니 담기 + 바로 구매
@@ -339,7 +359,11 @@ async function loadProductDetail() {
     '<div class="actions"><button class="btn btn-lg" id="addBtn" type="button"' + (soldOut ? ' disabled' : '') + '>ADD TO CART</button>' +
     '<button class="btn btn-primary btn-lg" id="buyBtn" type="button"' + (soldOut ? ' disabled' : '') + '>BUY NOW</button></div>' +
     '<div id="detailMessage" class="message"></div>' +
-    '<div class="info-box">배송: 3만원 이상 무료배송, 오늘 주문 내일 도착<br>반품: 수령 후 7일 이내 가능</div></div></section>';
+    '<div class="info-box">배송: 3만원 이상 무료배송, 오늘 주문 내일 도착<br>반품: 수령 후 7일 이내 가능</div>' +
+    (isAdmin() ? '<button class="btn btn-light" id="delBtn" type="button" style="margin-top:18px">이 상품 삭제 (관리자)</button>' : '') +
+    '</div></section>';
+  const delBtn = document.getElementById('delBtn');   // 관리자에게만 존재. 삭제 성공 시 메인으로 이동
+  if (delBtn) delBtn.onclick = function () { deleteProduct(p.id, p.name, function () { setTimeout(function () { window.location.href = '/'; }, 600); }); };
 
   const qtyEl = document.getElementById('qty');
   document.getElementById('qMinus').onclick = function () { if (+qtyEl.value > 1) qtyEl.value = +qtyEl.value - 1; };

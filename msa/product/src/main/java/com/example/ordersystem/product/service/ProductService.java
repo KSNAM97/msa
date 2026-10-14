@@ -62,6 +62,15 @@ public class ProductService {
         return product;
     }
 
+    // 상품 삭제. 없는 id 면 EntityNotFoundException.
+    // 이미 이 상품으로 주문한 내역은 유지되고, 주문내역 화면에는 "(삭제된 상품)"으로 표시된다.
+    // ponytail: S3 에 올라간 이미지 파일은 지우지 않는다(고아 파일). 필요하면 S3Service 에 delete 추가
+    public void productDelete(Long id){
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("없는 상품입니다."));
+        productRepository.delete(product);
+    }
+
     public Product purchaseProduct(Long id){
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("없는 상품입니다."));
