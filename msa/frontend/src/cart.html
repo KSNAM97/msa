@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장바구니 - NAM97 MALL</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <div id="siteHeader"></div>
+  <main class="container">
+    <section class="panel">
+      <h2>장바구니</h2>
+      <div id="cartBox"></div>
+    </section>
+  </main>
+  <div id="siteFooter"></div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    renderLayout();
+    renderCartPage();   // localStorage 의 장바구니를 표로 렌더링, 주문하기 -> /ordering/create
+  </script>
+</body>
+</html>

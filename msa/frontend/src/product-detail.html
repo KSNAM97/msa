@@ -3,31 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>상품 상세</title>
+  <title>상품 상세 - NAM97 MALL</title>
   <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-  <header class="header">
-    <div class="container">
-      <a href="/" class="brand">Soldesk <span class="brand-accent">Mall</span></a>
-      <nav class="nav">
-        <a class="btn btn-light" href="/">메인</a>
-        <a class="btn btn-primary" data-auth-only style="display:none;" href="/product-create.html">상품등록</a>
-        <a class="btn btn-secondary" data-guest-only href="/login.html">로그인</a>
-        <a class="btn btn-secondary" data-guest-only href="/signup.html">회원가입</a>
-        <div id="userBox"></div>
-      </nav>
-    </div>
-  </header>
-
-  <main class="container detail-page">
-    <div id="productDetail"></div>
-  </main>
+  <div id="siteHeader"></div>
+  <main class="container"><div id="productDetail"></div></main>
+  <div id="siteFooter"></div>
 
   <script src="/assets/app.js"></script>
   <script>
-    renderHeader();
-    loadProductDetail();
+    renderLayout();
+    loadProductDetail();   // ?id= 로 상품을 조회해 수량 선택/장바구니/바로구매 UI 렌더링
   </script>
 </body>
 </html>

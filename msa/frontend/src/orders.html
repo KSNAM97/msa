@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>주문내역 - NAM97 MALL</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <div id="siteHeader"></div>
+  <main class="container">
+    <section class="panel">
+      <h2>주문내역</h2>
+      <div id="orderMessage" class="message"></div>
+      <div id="orderBox">불러오는 중...</div>
+    </section>
+  </main>
+  <div id="siteFooter"></div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    renderLayout();
+    loadOrders();   // 로그인 필요. GET /ordering-service/ordering/my
+  </script>
+</body>
+</html>

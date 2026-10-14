@@ -22,4 +22,10 @@ public class OrderingController {
         return new ResponseEntity<>(ordering.getId(), HttpStatus.CREATED);
     }
 
+    // 내 주문내역. 사용자 식별은 게이트웨이(JwtAuthFilter)가 토큰에서 꺼내 넣어주는 X-User-Id 헤더를 사용한다
+    @GetMapping("/my")
+    public ResponseEntity<?> myOrders(@RequestHeader("X-User-Id") String userId) {
+        return new ResponseEntity<>(orderingService.myOrders(userId), HttpStatus.OK);
+    }
+
 }

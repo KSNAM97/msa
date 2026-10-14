@@ -3,65 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>로그인</title>
+  <title>로그인 - NAM97 MALL</title>
   <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-  <header class="header">
-    <div class="container">
-      <a href="/" class="brand">Soldesk <span class="brand-accent">Mall</span></a>
-      <nav class="nav">
-        <a class="btn btn-light" href="/">메인</a>
-        <a class="btn btn-secondary" data-guest-only href="/signup.html">회원가입</a>
-        <div id="userBox"></div>
-      </nav>
-    </div>
-  </header>
-
-  <main class="form-page">
+  <div id="siteHeader"></div>
+  <main class="container">
     <section class="form-wrap">
       <h2>로그인</h2>
-      <div class="form-intro">가입한 계정으로 로그인하고 원하는 상품을 바로 만나보세요.</div>
       <form id="loginForm">
-        <div class="field">
-          <label for="loginId">아이디</label>
-          <input id="loginId" name="loginId" type="text" required>
-        </div>
-        <div class="field">
-          <label for="password">비밀번호</label>
-          <input id="password" name="password" type="password" required>
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" type="submit">로그인</button>
-          <a class="btn btn-light" href="/">메인으로</a>
-        </div>
-        <div id="loginMessage" style="display:none;"></div>
+        <div class="field"><label for="loginId">아이디</label><input id="loginId" type="text" required></div>
+        <div class="field"><label for="password">비밀번호</label><input id="password" type="password" required></div>
+        <button class="btn btn-primary btn-lg" type="submit" style="width:100%">로그인</button>
+        <p style="text-align:center;font-size:13px">계정이 없으신가요? <a href="/signup.html"><b>회원가입</b></a></p>
+        <div id="loginMessage" class="message"></div>
       </form>
     </section>
   </main>
+  <div id="siteFooter"></div>
 
   <script src="/assets/app.js"></script>
   <script>
-    renderHeader();
-
-    document.getElementById('loginForm').addEventListener('submit', async function (event) {
-      event.preventDefault();
-      const payload = {
-        loginId: document.getElementById('loginId').value,
-        password: document.getElementById('password').value
-      };
-
+    renderLayout();
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
       try {
+        // 응답: { token, refreshToken, role, nickname ... } 전체를 localStorage 에 저장
         const result = await apiRequest('/member-service/member/doLogin', {
           method: 'POST',
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ loginId: document.getElementById('loginId').value, password: document.getElementById('password').value })
         });
         saveAuth(result);
-        showMessage('loginMessage', '로그인에 성공했습니다. 메인페이지로 이동합니다.', 'success');
-        setTimeout(function () {
-          window.location.href = '/';
-        }, 700);
-      } catch (error) {
+        window.location.href = '/';
+      } catch (err) {
         showMessage('loginMessage', '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.', 'error');
       }
     });
