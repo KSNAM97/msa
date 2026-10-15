@@ -256,7 +256,8 @@
       const aws = 'https://' + region + '.console.aws.amazon.com/cloudwatch/home?region=' + region;
       document.getElementById('monTools').innerHTML =
         link('Grafana', '메트릭 대시보드 (NAM97 MALL 개요)', 'https://grafana.' + base) +
-        link('Prometheus', '메트릭 수집/쿼리', 'https://prometheus.' + base) +
+        link('Prometheus', '수집 대상 상태, 쿼리 (up 쿼리가 채워져 열림)', 'https://prometheus.' + base + '/query?g0.expr=up&g0.tab=1') +
+        link('Grafana 대시보드 목록', 'NAM97 폴더의 대시보드 6종', 'https://grafana.' + base + '/dashboards') +
         link('CloudWatch 대시보드', 'RDS/노드 지표 (AWS 로그인 필요)', aws + '#dashboards:name=nam97-sandbox') +
         link('CloudWatch 알람', '알람 상태 (AWS 로그인 필요)', aws + '#alarmsV2:');
     }

@@ -120,22 +120,22 @@ CloudWatch는 Grafana 파드의 서비스어카운트에 연결한 **읽기 전�
 
 ## 9. 샘플 화면
 
-실제 화면 코드를 그대로 쓰고 샘플 데이터로 동작하게 만든 HTML 파일이다. **서버 없이** 파일을 브라우저로 열면 된다 (저장소를 내려받은 뒤 더블클릭).
+실제 화면 코드를 그대로 쓰고 샘플 데이터로 동작하게 만든 HTML 이다. 아래 링크(GitHub Pages)를 누르면 **바로 화면으로 보인다** → [샘플 모음 첫 화면](https://ksnam97.github.io/msa/). 파일은 `docs/samples/` 에 있고, 내려받아 열어도 서버 없이 동작한다.
 
 | 샘플 | 파일 | 보는 법 |
 |---|---|---|
-| 쇼핑몰 메인 (대표 페이지) | [`samples/storefront.html`](samples/storefront.html) | 카테고리 메뉴, 정렬, 카드 호버(`ADD TO CART`), 품절/잔여 뱃지 |
-| 상품 상세 | [`samples/product-detail.html`](samples/product-detail.html) | 큰 이미지, 수량 선택, 장바구니 / 바로 구매 |
-| 장바구니 | [`samples/cart.html`](samples/cart.html) | 수량 조절, 삭제, 총 결제금액, 주문하기 (로그인 상태 샘플) |
-| 주문내역 | [`samples/orders.html`](samples/orders.html) | 주문완료/취소 상태, 주문 취소 버튼 |
-| 내 정보 | [`samples/mypage.html`](samples/mypage.html) | 정보 수정, 비밀번호 변경(확인란 포함) |
-| 회원가입 / 로그인 | [`samples/signup.html`](samples/signup.html) · [`samples/login.html`](samples/login.html) | 이메일·비밀번호 규칙 안내, 비밀번호 확인란 |
-| 관리자 페이지 | [`samples/admin-console.html`](samples/admin-console.html) | 위쪽 탭을 눌러 요약/서비스/배포/쿠버네티스/DB/쇼핑몰 확인 |
-| Grafana 대시보드 | [`samples/grafana-dashboards.html`](samples/grafana-dashboards.html) | 위쪽 탭으로 대시보드 6종 전환 (그래프 값은 샘플) |
+| 쇼핑몰 메인 (대표 페이지) | [`samples/storefront.html`](https://ksnam97.github.io/msa/samples/storefront.html) | 카테고리 메뉴, 정렬, 카드 호버(`ADD TO CART`), 품절/잔여 뱃지 |
+| 상품 상세 | [`samples/product-detail.html`](https://ksnam97.github.io/msa/samples/product-detail.html) | 큰 이미지, 수량 선택, 장바구니 / 바로 구매 |
+| 장바구니 | [`samples/cart.html`](https://ksnam97.github.io/msa/samples/cart.html) | 수량 조절, 삭제, 총 결제금액, 주문하기 (로그인 상태 샘플) |
+| 주문내역 | [`samples/orders.html`](https://ksnam97.github.io/msa/samples/orders.html) | 주문완료/취소 상태, 주문 취소 버튼 |
+| 내 정보 | [`samples/mypage.html`](https://ksnam97.github.io/msa/samples/mypage.html) | 정보 수정, 비밀번호 변경(확인란 포함) |
+| 회원가입 / 로그인 | [`samples/signup.html`](https://ksnam97.github.io/msa/samples/signup.html) · [`samples/login.html`](https://ksnam97.github.io/msa/samples/login.html) | 이메일·비밀번호 규칙 안내, 비밀번호 확인란 |
+| 관리자 페이지 | [`samples/admin-console.html`](https://ksnam97.github.io/msa/samples/admin-console.html) | 위쪽 탭을 눌러 요약/서비스/배포/쿠버네티스/DB/쇼핑몰 확인 |
+| Grafana 대시보드 | [`samples/grafana-dashboards.html`](https://ksnam97.github.io/msa/samples/grafana-dashboards.html) | 위쪽 탭으로 대시보드 6종 전환 (그래프 값은 샘플) |
 
 - 쇼핑몰/관리자 샘플은 `msa/frontend/src`의 실제 코드를 합쳐 만든 것이라, 화면을 고치면 샘플도 다시 만들어야 한다(스크립트: 같은 코드 + 샘플 데이터 응답 한 줄 추가).
 - Grafana 샘플은 실제 대시보드 정의(`msa/k8s/k8s-monitoring/grafana-config.yml`)와 같은 패널 구성을 그린 모형이다. 배포 후 실제 Grafana에서는 실시간 값이 표시된다.
-- GitHub 저장소 화면에서는 HTML이 소스로 보이므로, 내려받아 열거나 GitHub Pages로 공개하면 화면 그대로 볼 수 있다.
+- GitHub 저장소 화면(`github.com/...`)에서 HTML 파일을 열면 코드로 보이므로, 화면으로 볼 때는 위 Pages 주소(`ksnam97.github.io`)를 쓴다. (설정: 저장소 Settings → Pages → `main` 브랜치 `/docs` 폴더)
 
 ## 10. 스크린샷
 

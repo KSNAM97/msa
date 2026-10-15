@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAM97 MALL 화면 샘플</title>
+<style>
+  /* GitHub Pages 첫 화면: 샘플 화면 목록. 쇼핑몰과 같은 미니멀 톤 */
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Noto Sans KR", "Helvetica Neue", Arial, sans-serif; font-weight: 300; color: #111; background: #fff; }
+  header { padding: 56px 6% 24px; border-bottom: 1px solid #e8e8e8; }
+  h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: .02em; }
+  h1 b { font-weight: 300; }
+  p.lead { margin: 12px 0 0; color: #666; line-height: 1.8; max-width: 720px; }
+  main { padding: 32px 6% 64px; max-width: 1200px; margin: 0 auto; }
+  h2 { font-size: 12px; font-weight: 400; letter-spacing: .12em; text-transform: uppercase; margin: 36px 0 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  a.card { display: block; border: 1px solid #e8e8e8; padding: 20px; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+  a.card:hover { border-color: #111; transform: translateY(-2px); }
+  a.card b { display: block; font-weight: 400; margin-bottom: 6px; }
+  a.card span { font-size: 12px; color: #8a8a8a; line-height: 1.6; }
+  footer { padding: 24px 6%; border-top: 1px solid #e8e8e8; font-size: 12px; color: #8a8a8a; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NAM97 <b>MALL</b> 화면 샘플</h1>
+  <p class="lead">AWS EKS 위에서 운영되는 MSA 쇼핑몰의 실제 화면 코드를 샘플 데이터로 보여 줍니다. 서버 없이 동작하며, 값은 모두 샘플입니다.</p>
+</header>
+<main>
+  <h2>쇼핑몰</h2>
+  <div class="grid">
+    <a class="card" href="samples/storefront.html"><b>메인 (대표 페이지)</b><span>카테고리 메뉴, 정렬, 카드 호버, 품절/잔여 뱃지</span></a>
+    <a class="card" href="samples/product-detail.html"><b>상품 상세</b><span>큰 이미지, 수량 선택, 장바구니 / 바로 구매</span></a>
+    <a class="card" href="samples/cart.html"><b>장바구니</b><span>수량 조절, 삭제, 총 결제금액</span></a>
+    <a class="card" href="samples/orders.html"><b>주문내역</b><span>주문완료/취소 상태, 주문 취소</span></a>
+  </div>
+  <h2>회원</h2>
+  <div class="grid">
+    <a class="card" href="samples/signup.html"><b>회원가입</b><span>이메일·비밀번호 규칙 안내, 비밀번호 확인</span></a>
+    <a class="card" href="samples/login.html"><b>로그인</b><span>간단한 로그인 화면</span></a>
+    <a class="card" href="samples/mypage.html"><b>내 정보</b><span>정보 수정, 비밀번호 변경</span></a>
+  </div>
+  <h2>운영</h2>
+  <div class="grid">
+    <a class="card" href="samples/admin-console.html"><b>관리자 콘솔</b><span>요약 · 서비스 · 배포(ArgoCD/CI·CD) · 쿠버네티스 · DB · 쇼핑몰 탭</span></a>
+    <a class="card" href="samples/grafana-dashboards.html"><b>Grafana 대시보드</b><span>K8s, RDS, EC2, NLB, CloudWatch Logs 등 6종</span></a>
+  </div>
+</main>
+<footer>
+  <a href="https://github.com/KSNAM97/msa">GitHub 저장소</a> · 구조·실행 방법 문서는 저장소의 <code>docs/</code> 폴더를 보세요.
+</footer>
+</body>
+</html>
