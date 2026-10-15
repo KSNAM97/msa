@@ -403,8 +403,24 @@
       })) : '<div class="empty" style="padding:24px">재고가 부족한 상품이 없습니다.</div>';
     }
 
-    // 서비스 상태는 30초마다 자동 갱신(서비스 탭이나 요약이 열려 있을 때만 의미가 있으므로 가볍게)
-    setInterval(function () { if (['summary', 'services'].indexOf(location.hash.slice(1) || 'summary') >= 0) check(); }, 30000);
+    // 자동 갱신(폴링): 15초마다 "지금 보고 있는 탭"의 데이터만 REST API 로 다시 불러온다.
+    // - 브라우저 탭이 가려져 있으면(document.hidden) 건너뛰어 불필요한 요청을 줄인다
+    // - 요약 탭은 모든 영역을 보여주므로 전체를 갱신한다. 모니터링 탭은 링크뿐이라 갱신할 것이 없다
+    // ponytail: 서버가 알려주는 방식(SSE/WebSocket)이 아니라 주기적으로 묻는 방식이라 최대 15초 늦다. 즉시 반영이 필요하면 SSE 로 교체
+    const POLL_MS = 15000;
+    function refreshTab(id) {
+      if (id === 'summary') { check(); loadReq(); loadAdminOrders(); loadAdminMembers(); loadArgo(); loadCi(); loadK8s(); loadDbTables(); getProducts().then(function (p) { S.products = p; renderSummary(); }).catch(function () {}); }
+      if (id === 'services') { check(); loadReq(); }
+      if (id === 'deploy') { loadArgo(); loadCi(); }
+      if (id === 'k8s') loadK8s();
+      if (id === 'db') loadDbTables();
+      if (id === 'shop') { loadAdminOrders(); loadAdminMembers(); }
+    }
+    setInterval(function () {
+      if (document.hidden) return;
+      const id = location.hash.slice(1) || 'summary';
+      if (loaded[id]) refreshTab(id);   // 아직 처음 불러오지 않은 탭은 showTab 이 불러온다
+    }, POLL_MS);
     showTab();
   </script>
 </body>
