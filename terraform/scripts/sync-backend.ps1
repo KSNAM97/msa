@@ -1,9 +1,9 @@
 ﻿# apply 후 실행: 테라폼 output 값으로 ../aws-msa-backend 의 하드코딩 값을 자동 교체 (여러 번 실행해도 안전)
-# 사용: .\sync-backend.ps1            (commit/push는 직접)
-param([string]$Backend = (Join-Path $PSScriptRoot '..'), [string]$Domain = 'ksnam97.com')
+# 사용: .\scripts\sync-backend.ps1 (terraform 폴더에서)            (commit/push는 직접)
+param([string]$Backend = (Join-Path $PSScriptRoot '..\..'), [string]$Domain = 'ksnam97.com')
 $ErrorActionPreference = 'Stop'
 
-Push-Location $PSScriptRoot
+Push-Location (Split-Path $PSScriptRoot -Parent)   # terraform 폴더
 try {
   $acct   = terraform output -raw account_id
   $bucket = terraform output -raw s3_bucket

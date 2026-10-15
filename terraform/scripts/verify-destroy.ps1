@@ -17,6 +17,7 @@ Check 'S3 버킷'            (aws s3api list-buckets --query "Buckets[?starts_wi
 Check 'S3 버킷(CloudTrail 로그)' (aws s3api list-buckets --query "Buckets[?starts_with(Name,'$Cluster-cloudtrail-$acct')].Name" --output text)
 Check 'CloudTrail 추적'    (aws cloudtrail describe-trails --region $Region --query "trailList[?starts_with(Name,'$Cluster')].Name" --output text)
 Check 'IAM 사용자'         (aws iam list-users --query "Users[?starts_with(UserName,'$Cluster')].UserName" --output text)
+Check 'IAM 정책'           (aws iam list-policies --scope Local --query "Policies[?starts_with(PolicyName,'$Cluster')].PolicyName" --output text)
 Check 'IAM 역할'           (aws iam list-roles --query "Roles[?starts_with(RoleName,'$Cluster')].RoleName" --output text)
 Check 'VPC'                (aws ec2 describe-vpcs --region $Region --filters "Name=tag:Name,Values=$Cluster-vpc" --query 'Vpcs[].VpcId' --output text)
 Check 'NAT 게이트웨이'     (aws ec2 describe-nat-gateways --region $Region --filter "Name=state,Values=available,pending" --query "NatGateways[?Tags[?Value=='$Cluster-vpc']].NatGatewayId" --output text)
