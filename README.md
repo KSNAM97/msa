@@ -5,6 +5,8 @@ AWS EKS 위에서 운영되는 **마이크로서비스(MSA) 쇼핑몰**입니다
 
 > 이 저장소는 포트폴리오용 공개 프로젝트입니다. 인프라는 필요할 때만 띄우고(`terraform apply`) 쓰지 않을 때는 모두 삭제(`terraform destroy`)하는 샌드박스 방식으로 운영합니다.
 
+![AWS EKS 프로젝트 구성도](docs/images/architecture.svg)
+
 ## 문서
 
 | 문서 | 내용 |

@@ -4,6 +4,8 @@
 
 ## 1. 전체 구성도
 
+![AWS EKS 프로젝트 구성도](images/architecture.svg)
+
 ```mermaid
 flowchart LR
   user([사용자 / 관리자]) -->|HTTPS| r53[Route53<br/>ksnam97.com]
