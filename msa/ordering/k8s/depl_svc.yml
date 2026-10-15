@@ -18,6 +18,8 @@ spec:
         app: ordering 
     spec:
       # 보안: root 로 실행 금지, 권한 상승 금지, 불필요한 리눅스 capability 전부 제거
+      # 주문 알림(SNS)용 IAM 역할(IRSA)이 연결된 서비스어카운트 (terraform/order_alerts.tf 가 만든다)
+      serviceAccountName: ordering
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -42,6 +44,15 @@ spec:
             cpu: "0.5"
             memory: "250Mi"
         env:
+        # 주문 알림을 보낼 SNS 토픽. 테라폼이 시크릿으로 넣는다 (없으면 알림 꺼짐)
+        - name: SNS_TOPIC_ARN
+          valueFrom:
+            secretKeyRef:
+              name: my-app-secrets
+              key: SNS_TOPIC_ARN
+              optional: true
+        - name: AWS_REGION
+          value: ap-northeast-2
         - name: DB_HOST
           valueFrom:
             secretKeyRef:

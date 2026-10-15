@@ -25,12 +25,14 @@ public class OrderingService {
     private final CartItemRepository cartItemRepository;
     private final RestTemplate restTemplate;
     private final ProductFeign productFeign;
+    private final OrderNotifier orderNotifier;   // 주문 성공 시 SNS 알림(이메일)
 
-    public OrderingService(OrderingRepository orderingRepository, CartItemRepository cartItemRepository, RestTemplate restTemplate, ProductFeign productFeign) {
+    public OrderingService(OrderingRepository orderingRepository, CartItemRepository cartItemRepository, RestTemplate restTemplate, ProductFeign productFeign, OrderNotifier orderNotifier) {
         this.orderingRepository = orderingRepository;
         this.cartItemRepository = cartItemRepository;
         this.restTemplate = restTemplate;
         this.productFeign = productFeign;
+        this.orderNotifier = orderNotifier;
     }
 
     public Ordering orderCreate(OrderCreateDto orderDto, String userId){
@@ -63,6 +65,7 @@ public class OrderingService {
                 .quantity(orderDto.getProductCount())
                 .build();
         orderingRepository.save(ordering);
+        orderNotifier.orderPlaced(ordering.getId(), ordering.getMemberId(), productDto.getName(), quantity, productDto.getStockQuantity() - quantity);
         return  ordering;
     }
 
@@ -86,6 +89,8 @@ public class OrderingService {
                 .quantity(orderDto.getProductCount())
                 .build();
         orderingRepository.save(ordering);
+        // 주문이 커밋된 뒤 SNS 로 알림 (남은 재고가 적으면 "재고 부족" 알림). 알림 실패는 주문에 영향 없음
+        orderNotifier.orderPlaced(ordering.getId(), ordering.getMemberId(), productDto.getName(), quantity, productDto.getStockQuantity() - quantity);
         return  ordering;
     }
 

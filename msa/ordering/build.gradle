@@ -37,6 +37,10 @@ dependencies {
 //	msa간의 통신을 하기 위한 openfeign의존성 추가
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
+	// 주문 알림(SNS 발행). 파드의 IAM 역할(IRSA)로 인증하려면 sts 모듈이 필요하다 (버전은 product 서비스의 s3 sdk 와 같게)
+	implementation 'com.amazonaws:aws-java-sdk-sns:1.12.767'
+	implementation 'com.amazonaws:aws-java-sdk-sts:1.12.767'
+
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 }

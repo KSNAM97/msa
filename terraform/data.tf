@@ -156,6 +156,8 @@ resource "kubernetes_secret" "app" {
   data = {
     DB_HOST = aws_db_instance.this.address
     DB_PW   = random_password.db.result
+    # 주문 알림을 보낼 SNS 토픽 (order_alerts.tf). ordering 서비스가 SNS_TOPIC_ARN 환경변수로 읽는다
+    SNS_TOPIC_ARN = data.aws_sns_topic.alerts.arn
   }
 }
 
