@@ -1,9 +1,6 @@
-# 모니터링 ingress: Grafana 와 Prometheus 를 같은 인증서(monitoring-ksnam97-com-tls)로 노출한다.
-# Prometheus 는 첫 화면(/)이 "빈 쿼리 입력칸"이라 아무것도 안 보이므로, 접속하면 바로
-# 수집 대상 상태(up)가 표로 보이는 화면으로 이동시킨다 (app-root 주석). Grafana 는 그대로 둔다 -> 그래서 ingress 를 둘로 나눴다.
-#
-# [인증서] 아래 첫 번째 ingress(grafana)의 cert-manager 주석이 두 호스트가 들어간 인증서를 발급/갱신한다.
-#          두 번째 ingress(prometheus)는 같은 시크릿을 "사용만" 한다(주석을 달면 인증서를 서로 덮어쓰므로 달지 않는다).
+# Prometheus 첫 화면(/)은 원래 "빈 쿼리 입력칸"이다(쿼리를 직접 입력해야 결과가 나옴). 쿼리가 채워진 화면으로 바로 열려면
+#   https://prometheus.<도메인>/query?g0.expr=up&g0.tab=1   (관리자 콘솔의 Prometheus 링크가 이 주소를 사용)
+# 참고: ingress 의 app-root 주석으로 첫 화면을 바꾸려는 시도는 쿼리 문자열이 적용되지 않아 쓰지 않는다.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -20,33 +17,6 @@ spec:
     - grafana.ksnam97.com
     secretName: monitoring-ksnam97-com-tls
   rules:
-  - host: grafana.ksnam97.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: grafana
-            port:
-              number: 3000
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: prometheus-ingress
-  namespace: monitoring
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    # 루트(/)로 접속하면 "up 쿼리를 표(table)로 실행한 화면"으로 이동 (Prometheus 3 의 주소 형식: /query?g0.expr=...&g0.tab=1)
-    nginx.ingress.kubernetes.io/app-root: /query?g0.expr=up&g0.tab=1
-spec:
-  ingressClassName: nginx
-  tls:
-  - hosts:
-    - prometheus.ksnam97.com
-    secretName: monitoring-ksnam97-com-tls
-  rules:
   - host: prometheus.ksnam97.com
     http:
       paths:
@@ -57,3 +27,14 @@ spec:
             name: prometheus-service
             port:
               number: 9090
+
+  - host: grafana.ksnam97.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 3000
