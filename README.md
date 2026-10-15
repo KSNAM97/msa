@@ -16,6 +16,7 @@ AWS EKS 위에서 운영되는 **마이크로서비스(MSA) 쇼핑몰**입니다
 | [함수/API 참고](docs/REFERENCE.md) | API 목록과 권한, 서비스 메서드, 프론트 함수, 테라폼 변수, 스크립트 |
 | [구성과 주요 스택](docs/ARCHITECTURE.md) | 전체 구성도, 서비스/API, 기술 스택, Terraform 구성, 배포 흐름, 보안 설계 |
 | [문제 해결 기록](docs/TROUBLESHOOTING.md) | 겪은 문제를 증상 · 원인 · 해결로 정리 |
+| [변경 이력](CHANGELOG.md) | 큰 변경을 날짜순으로 정리 |
 | [보안 점검과 조치](docs/SECURITY.md) | 점검한 취약점, 적용한 보안 설정, 남은 항목과 이유 |
 | [롤백](docs/ROLLBACK.md) | 코드 · 매니페스트 · 인프라를 이전 상태로 되돌리는 방법 |
 | [실습 결과와 한계](docs/RESULTS.md) | 확인한 결과 표와 실습용 구성의 한계 |
