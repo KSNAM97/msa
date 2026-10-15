@@ -17,17 +17,6 @@ spec:
     - grafana.ksnam97.com
     secretName: monitoring-ksnam97-com-tls
   rules:
-  - host: prometheus.ksnam97.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: prometheus-service
-            port:
-              number: 9090
-
   - host: grafana.ksnam97.com
     http:
       paths:
@@ -38,3 +27,34 @@ spec:
             name: grafana
             port:
               number: 3000
+---
+# 보안: Prometheus 는 자체 로그인이 없어서 ingress 에서 Basic 인증을 건다 (DB 관리 화면 Adminer 와 같은 계정/시크릿 adminer-basic-auth).
+# Grafana 는 자체 로그인이 있으므로 위 ingress 에서 따로 관리한다. 인증서(시크릿)는 위 ingress/Certificate 가 만든 것을 그대로 쓴다
+# (여기에는 cert-manager 주석을 두지 않는다: 같은 시크릿을 두 ingress 가 발급하려고 서로 덮어쓰는 것을 막기 위해)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-ingress
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: adminer-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "NAM97 Prometheus"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - prometheus.ksnam97.com
+    secretName: monitoring-ksnam97-com-tls
+  rules:
+  - host: prometheus.ksnam97.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 9090
