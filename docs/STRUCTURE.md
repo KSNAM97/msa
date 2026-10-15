@@ -80,7 +80,6 @@ aws-msa-backend/                       ← 저장소 루트 (GitHub: KSNAM97/msa
 | `k8s-argocd/` | ArgoCD ingress(`argo.<도메인>`) |
 | `k8s-hpa/` | 서비스별 HPA(CPU 기준 파드 자동 증감), 부하 테스트용 `stress.yaml` |
 | `k8s-monitoring/` | Prometheus(설정·RBAC·배포), Grafana(배포·자동 설정·대시보드), node-exporter, Adminer, 모니터링 ingress |
-| `autoscaler/` | (참고용) 클러스터 오토스케일러. 실제 설치는 테라폼의 helm 이 담당 |
 
 ## 5. 테라폼 (`terraform/`)
 
