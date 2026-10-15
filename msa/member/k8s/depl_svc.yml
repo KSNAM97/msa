@@ -42,6 +42,24 @@ spec:
             secretKeyRef:
               name: my-app-secrets
               key: DB_PW
+        # JWT 서명 키 (apigateway 와 같은 jwt-secret 시크릿. 테라폼이 생성)
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET_KEY
+        - name: JWT_SECRET_KEY_RT
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET_KEY_RT
+        # 초기 관리자(admin) 비밀번호. 시크릿이 없으면 관리자 계정을 만들지 않는다(optional)
+        - name: ADMIN_INITIAL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: admin-secret
+              key: ADMIN_PASSWORD
+              optional: true
         # 컨테이너 상태 확인 
         readinessProbe:
           httpGet:
@@ -52,6 +70,14 @@ spec:
           initialDelaySeconds: 10
           # 확인 반복 주기
           periodSeconds: 10
+        # liveness: 응답이 없으면 컨테이너를 재시작한다 (기동이 느려도 시작 중에 재시작되지 않도록 지연을 넉넉히)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          failureThreshold: 3
 
 ---
 apiVersion: v1

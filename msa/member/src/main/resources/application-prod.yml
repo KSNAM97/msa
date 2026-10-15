@@ -19,6 +19,8 @@ spring:
 
 jwt:
   expiration: 1000
-  secretKey: YmV5b25kYWNjZXNzdG9rZW5zZWNyZXRrZXliZXlvbmRhY2Nlc3N0b2tlbnNlY3JldGtleWJleW9uZGFjY2Vzc3Rva2Vuc2VjcmV0a2V5
+  # 서명 키는 소스에 두지 않고 환경변수로 받는다 (쿠버네티스 시크릿 jwt-secret 에서 주입, 테라폼이 랜덤 생성)
+  # Base64 로 인코딩된 64바이트 이상(HS512)이어야 한다. apigateway 와 같은 값을 써야 토큰 검증이 된다
+  secretKey: ${JWT_SECRET_KEY}
   expirationRt: 288000
-  secretKeyRt: YmV5b25kcmVmcmVzaHRva2Vuc2VjcmV0a2V5YmV5b25kcmVmcmVzaHRva2Vuc2VjcmV0a2V5YmV5b25kcmVmcmVzaHRva2Vuc2VjcmV0a2V5
+  secretKeyRt: ${JWT_SECRET_KEY_RT}

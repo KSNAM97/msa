@@ -50,12 +50,20 @@ spec:
                 secretKeyRef:
                   name: aws-secret
                   key: AWS_SECRET_ACCESS_KEY
+          # readiness: 준비되기 전에는 트래픽을 보내지 않는다 / liveness: 응답이 없으면 컨테이너를 재시작한다
           readinessProbe:
             httpGet:
               path: /health
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 90   # Spring 기동이 느려도(작은 노드) 시작 중에 재시작되지 않도록 넉넉히
+            periodSeconds: 15
+            failureThreshold: 3
 
 ---
 apiVersion: v1

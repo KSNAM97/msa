@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 - NAM97 MALL</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <style>
+    /* 관리자 페이지 전용 스타일 (공통 style.css 의 색/여백 변수를 그대로 사용) */
+    .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .tool { display: block; border: 1px solid var(--line); padding: 20px; }
+    .tool:hover { border-color: var(--text); }
+    .tool b { display: block; font-weight: 400; letter-spacing: .08em; font-size: 12px; text-transform: uppercase; margin-bottom: 6px; }
+    .tool span { font-size: 12px; color: var(--muted); }
+    .health { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+    .svc { border: 1px solid var(--line); padding: 16px; font-size: 13px; }
+    .svc .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #bbb; margin-right: 8px; }
+    .svc.up .dot { background: var(--ok); }
+    .svc.down .dot { background: var(--danger); }
+    .svc small { display: block; margin-top: 6px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div id="siteHeader"></div>
+  <main class="container">
+    <section class="panel">
+      <h2>서비스 상태</h2>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 14px">각 서비스의 /health 를 게이트웨이를 통해 호출합니다. <button class="btn btn-light" id="refreshBtn" type="button" style="padding:4px 12px">새로고침</button> <span id="checkedAt"></span></p>
+      <div class="health" id="health"></div>
+    </section>
+
+    <section class="panel">
+      <h2>운영 도구</h2>
+      <div class="admin-grid" id="tools"></div>
+    </section>
+
+    <section class="panel">
+      <h2>쇼핑몰 관리</h2>
+      <div class="admin-grid">
+        <a class="tool" href="/product-create.html"><b>상품 등록</b><span>새 상품과 이미지를 등록합니다</span></a>
+        <a class="tool" href="/"><b>상품 목록 / 삭제</b><span>메인에서 상품별 삭제 버튼을 사용합니다</span></a>
+      </div>
+    </section>
+  </main>
+  <div id="siteFooter"></div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    renderLayout();
+    // 화면 접근 제한(UX 용). 상태 조회/삭제 등 실제 권한은 서버(JWT + X-User-Role)에서 검사한다
+    if (guardLogin() && !isAdmin()) { alert('관리자만 접근할 수 있습니다.'); window.location.href = '/'; }
+
+    // ---- 운영 도구 링크: 현재 접속 도메인에서 서브도메인을 만들어 연결 (server.ksnam97.com -> grafana.ksnam97.com)
+    // 로컬 미리보기(localhost) 등 server. 로 시작하지 않으면 기본 도메인으로 대체
+    const base = location.hostname.indexOf('server.') === 0 ? location.hostname.slice('server.'.length) : 'ksnam97.com';
+    const region = 'ap-northeast-2';
+    const tools = [
+      { name: 'Grafana', desc: '메트릭 대시보드', href: 'https://grafana.' + base },
+      { name: 'Prometheus', desc: '메트릭 수집/쿼리', href: 'https://prometheus.' + base },
+      { name: 'ArgoCD', desc: 'GitOps 배포 현황', href: 'https://argo.' + base },
+      { name: 'CloudWatch 대시보드', desc: 'RDS/노드 지표 (AWS 콘솔 로그인 필요)', href: 'https://' + region + '.console.aws.amazon.com/cloudwatch/home?region=' + region + '#dashboards:name=nam97-sandbox' },
+      { name: 'CloudWatch 알람', desc: '알람 상태 (AWS 콘솔 로그인 필요)', href: 'https://' + region + '.console.aws.amazon.com/cloudwatch/home?region=' + region + '#alarmsV2:' },
+      { name: 'EKS 로그', desc: '컨트롤 플레인 로그 (AWS 콘솔 로그인 필요)', href: 'https://' + region + '.console.aws.amazon.com/cloudwatch/home?region=' + region + '#logsV2:log-groups' }
+    ];
+    // 외부 링크는 새 탭 + noopener (열린 탭이 이 창을 조작하지 못하게)
+    document.getElementById('tools').innerHTML = tools.map(function (t) {
+      return '<a class="tool" target="_blank" rel="noopener" href="' + esc(t.href) + '"><b>' + esc(t.name) + '</b><span>' + esc(t.desc) + '</span></a>';
+    }).join('');
+
+    // ---- 서비스 상태: 게이트웨이를 통해 각 서비스 /health 를 호출 (관리자 토큰이 필요한 경로라 로그인 상태에서만 성공)
+    const services = [
+      { name: 'Member', url: '/member-service/health' },
+      { name: 'Product', url: '/product-service/health' },
+      { name: 'Ordering', url: '/ordering-service/health' }
+    ];
+    async function check() {
+      const el = document.getElementById('health');
+      const results = [];
+      // 하나라도 응답하면 API Gateway 가 살아 있다는 뜻이므로, 게이트웨이 상태는 아래 결과에서 추론한다
+      for (const s of services) {
+        const t0 = performance.now();
+        let ok = false;
+        try { await apiRequest(s.url, { method: 'GET', headers: {} }); ok = true; } catch (e) { ok = false; }
+        results.push({ name: s.name, ok: ok, ms: Math.round(performance.now() - t0) });
+      }
+      const gwUp = results.some(function (r) { return r.ok; });
+      const rows = [{ name: 'API Gateway', ok: gwUp, ms: null }, { name: 'Frontend', ok: true, ms: null }].concat(results);
+      el.innerHTML = rows.map(function (r) {
+        return '<div class="svc ' + (r.ok ? 'up' : 'down') + '"><span class="dot"></span><b>' + esc(r.name) + '</b><small>' +
+          (r.ok ? '정상' : '응답 없음') + (r.ms != null ? ' · ' + r.ms + 'ms' : '') + '</small></div>';
+      }).join('');
+      document.getElementById('checkedAt').textContent = '마지막 확인: ' + new Date().toLocaleTimeString();
+    }
+    document.getElementById('refreshBtn').onclick = check;
+    check();
+    setInterval(check, 30000);   // 30초마다 자동 갱신
+  </script>
+</body>
+</html>

@@ -22,6 +22,13 @@ spec:
         image: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com/apigateway:latest
         ports:
         - containerPort: 8080
+        # JWT 검증 키 (member 가 서명에 쓰는 키와 동일해야 함). 테라폼이 만든 시크릿 jwt-secret 에서 주입
+        env:
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET_KEY
         resources:
         # 컨테이너가 사용할수 있는 리소스의 최대치
           limits:
@@ -31,7 +38,20 @@ spec:
           requests:
             cpu: "0.5"
             memory: "250Mi"
- 
+        # 게이트웨이 자체 상태: actuator 의 /actuator/health (게이트웨이가 직접 응답, 다른 서비스로 프록시되지 않음)
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          failureThreshold: 3
 ---
 apiVersion: v1
 kind: Service

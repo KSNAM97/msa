@@ -17,7 +17,20 @@ spec:
       - name: frontend-container
         image: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com/frontend-service:latest
         ports:
-        - containerPort: 80 
+        - containerPort: 80
+        # nginx 정적 서버: 메인 페이지가 응답하면 정상
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service

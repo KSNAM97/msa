@@ -143,3 +143,40 @@ resource "kubernetes_secret" "aws" {
     AWS_SECRET_ACCESS_KEY = aws_iam_access_key.s3.secret
   }
 }
+
+# ---------- 소스에서 분리한 비밀 값 (JWT 서명 키 / 초기 관리자 비밀번호) ----------
+# 예전에는 application-prod.yml 과 InitialDataLoader 에 고정값이 들어 있었다(공개 저장소에 노출).
+# 이제 apply 때마다 랜덤으로 생성해 쿠버네티스 시크릿으로만 전달한다. 값은 이 폴더의 terraform state(git 제외)에만 있다.
+
+# HS512 서명에는 64바이트 이상의 키가 필요 -> 랜덤 64바이트를 Base64 로 인코딩 (앱이 Base64 디코딩해서 사용)
+resource "random_id" "jwt_access" { byte_length = 64 }
+resource "random_id" "jwt_refresh" { byte_length = 64 }
+
+# 초기 관리자(admin) 비밀번호. 특수문자는 로그인/쉘에서 다루기 번거로워 제외
+resource "random_password" "admin" {
+  length  = 20
+  special = false
+}
+
+# apigateway(검증)와 member(서명)가 같은 키를 써야 하므로 시크릿 하나를 공유한다
+resource "kubernetes_secret" "jwt" {
+  metadata {
+    name      = "jwt-secret"
+    namespace = kubernetes_namespace.soldesk.metadata[0].name
+  }
+  data = {
+    JWT_SECRET_KEY    = random_id.jwt_access.b64_std
+    JWT_SECRET_KEY_RT = random_id.jwt_refresh.b64_std
+  }
+}
+
+# member 서비스가 최초 기동 시 admin 계정을 만들 때 사용
+resource "kubernetes_secret" "admin" {
+  metadata {
+    name      = "admin-secret"
+    namespace = kubernetes_namespace.soldesk.metadata[0].name
+  }
+  data = {
+    ADMIN_PASSWORD = random_password.admin.result
+  }
+}

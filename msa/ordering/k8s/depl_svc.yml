@@ -52,6 +52,14 @@ spec:
           initialDelaySeconds: 10
           # 확인 반복 주기
           periodSeconds: 10
+        # liveness: 응답이 없으면 컨테이너를 재시작한다 (기동이 느려도 시작 중에 재시작되지 않도록 지연을 넉넉히)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          failureThreshold: 3
 
 --- 
 apiVersion: v1

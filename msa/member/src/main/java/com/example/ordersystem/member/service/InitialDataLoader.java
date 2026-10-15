@@ -23,12 +23,20 @@ public class InitialDataLoader implements CommandLineRunner {
             return;
         }
 
+        // 초기 관리자 비밀번호는 소스에 두지 않고 환경변수(ADMIN_INITIAL_PASSWORD)로 받는다.
+        // 값이 없으면 관리자 계정을 만들지 않는다 (공개 저장소에 기본 비밀번호가 남지 않도록)
+        String adminPassword = System.getenv("ADMIN_INITIAL_PASSWORD");
+        if (adminPassword == null || adminPassword.isBlank()) {
+            System.out.println("ADMIN_INITIAL_PASSWORD 가 없어 초기 관리자 계정을 만들지 않습니다.");
+            return;
+        }
+
         Member member = Member.builder()
                 .name("관리자")
                 .loginId("admin")
                 .nickname("관리자")
                 .email("admin@naver.com")
-                .password(passwordEncoder.encode("12341234"))
+                .password(passwordEncoder.encode(adminPassword))
                 .role(Role.ADMIN)
                 .build();
         memberRepository.save(member);

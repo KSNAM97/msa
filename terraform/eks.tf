@@ -8,6 +8,11 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = var.k8s_version
 
+  # CloudWatch: 컨트롤 플레인 로그 중 보안/감사에 필요한 3종만 켠다 (api, audit, authenticator).
+  # 보관기간을 3일로 짧게 두어 로그 저장 비용을 최소화 (기본값은 90일). 필요하면 늘릴 것
+  cluster_enabled_log_types              = ["api", "audit", "authenticator"]
+  cloudwatch_log_group_retention_in_days = 3
+
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets # 노드는 private 서브넷에만 배치
 

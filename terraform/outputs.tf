@@ -7,3 +7,8 @@ output "account_id" { value = data.aws_caller_identity.me.account_id }          
 output "s3_bucket" { value = aws_s3_bucket.images.bucket }                                                               # sync-backend.ps1 이 사용
 output "rds_endpoint" { value = aws_db_instance.this.address }
 output "argocd_admin_pw_cmd" { value = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath={.data.password} | base64 -d" }
+# 초기 관리자(admin) 비밀번호 확인: terraform output -raw admin_password  (민감 값이라 평소에는 가려진다)
+output "admin_password" {
+  value     = random_password.admin.result
+  sensitive = true
+}
