@@ -4,7 +4,7 @@
 
 ## 1. 전체 구성도
 
-![AWS EKS 프로젝트 구성도](../images/architecture.svg)
+![AWS EKS 프로젝트 구성도](../images/architecture.png)
 
 ```mermaid
 flowchart LR
