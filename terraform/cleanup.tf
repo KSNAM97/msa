@@ -41,9 +41,12 @@ resource "terraform_data" "wait_lb_gone" {
     on_failure  = continue
     interpreter = ["PowerShell", "-NoProfile", "-Command"]
     command     = <<-EOT
+      # 이 VPC 안의 로드밸런서를 모두 센다: ALB/NLB(elbv2) + 클래식 ELB(elb). 둘 다 0 이 될 때까지 최대 10분 대기
+      # (예전에는 elbv2 만 확인해서, 클래식 ELB 일 때는 기다리지 않고 지나가 VPC 삭제가 막힐 수 있었다)
       for ($i = 0; $i -lt 30; $i++) {
-        $n = aws elbv2 describe-load-balancers --region ${self.input.region} --query "length(LoadBalancers[?VpcId=='${self.input.vpc_id}'])" --output text
-        if ($n -eq '0') { break }
+        $v2 = aws elbv2 describe-load-balancers --region ${self.input.region} --query "length(LoadBalancers[?VpcId=='${self.input.vpc_id}'])" --output text
+        $cl = aws elb describe-load-balancers --region ${self.input.region} --query "length(LoadBalancerDescriptions[?VPCId=='${self.input.vpc_id}'])" --output text
+        if (($v2 -eq '0') -and ($cl -eq '0')) { break }
         Start-Sleep -Seconds 20
       }
     EOT

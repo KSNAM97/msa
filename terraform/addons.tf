@@ -46,14 +46,45 @@ resource "helm_release" "metrics_server" {
   depends_on = [module.eks]
 }
 
-# 외부 진입점: 로드밸런서(클래식 ELB)를 만들고 도메인별(Host)로 서비스에 라우팅한다. ingress 매니페스트의 class "nginx" 와 연결
+# 외부 진입점: NLB(네트워크 로드밸런서)를 만들고 도메인별(Host)로 서비스에 라우팅한다. ingress 매니페스트의 class "nginx" 와 연결
+#
+# [현재 선택: NLB]  TCP 80/443 을 그대로 전달만 하고 TLS 는 ingress-nginx 가 처리한다(인증서 구성 변경 없음).
+#   - 로드밸런서 종류는 서비스를 만든 뒤에는 바꿀 수 없다. 기존 클러스터를 바꿀 때는 이 릴리스를 교체(-replace)해야 하고,
+#     새 로드밸런서가 만들어져 DNS 가 바뀐다(몇 분 접속 끊김). 새로 apply 하는 클러스터는 처음부터 NLB 로 만들어진다.
+#   - Grafana 로드밸런서 지표는 AWS/NetworkELB 기준이어야 한다 (msa/k8s/k8s-monitoring/grafana-config.yml)
+#
+# [이전 방식: 클래식 ELB]  위 주석(set 블록)이 없으면 구형 클래식 ELB 가 만들어진다 (지표 네임스페이스 AWS/ELB). 더 이상 권장되지 않는다.
+#
+# [참고: ALB 로 가려면 - 현재 사용하지 않음]  ALB 는 HTTP(L7) 로드밸런서라 ingress-nginx 대신 "AWS Load Balancer Controller" 를 설치하고
+#   ingress 를 alb 클래스로 바꾸는 별도 구성이다(인증서도 ACM 으로 교체). 지금 구조(ingress-nginx + cert-manager)에서는 NLB 가 맞다.
+#   ALB 로 바꿀 때 필요한 것(개요, 주석 처리해 둠):
+#     # resource "helm_release" "aws_lb_controller" {
+#     #   name       = "aws-load-balancer-controller"
+#     #   repository = "https://aws.github.io/eks-charts"
+#     #   chart      = "aws-load-balancer-controller"
+#     #   namespace  = "kube-system"
+#     #   set { name = "clusterName"  value = module.eks.cluster_name }
+#     #   # + IRSA 역할(IAM 정책 AWSLoadBalancerControllerIAMPolicy) 과 서비스어카운트 연결
+#     # }
+#     # ingress 주석: kubernetes.io/ingress.class: alb, alb.ingress.kubernetes.io/scheme: internet-facing, alb.ingress.kubernetes.io/certificate-arn: <ACM>
 resource "helm_release" "ingress_nginx" {
   name             = "ingress-nginx"
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
   namespace        = "ingress-nginx"
   create_namespace = true
-  depends_on       = [module.eks]
+
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-type"
+    value = "nlb"
+  }
+  # 가용영역 간 균등 분산 (노드가 2개 AZ 에 있어 한쪽에 몰리지 않게)
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-cross-zone-load-balancing-enabled"
+    value = "true"
+    type  = "string"
+  }
+  depends_on = [module.eks]
 }
 
 # Let's Encrypt 인증서 자동 발급/갱신. CRD 를 함께 설치해야 repo 의 Certificate/ClusterIssuer 가 적용된다
