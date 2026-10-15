@@ -4,7 +4,7 @@
 
 ## 1. 전체 구성도
 
-![AWS EKS 프로젝트 구성도](images/architecture.svg)
+![AWS EKS 프로젝트 구성도](../images/architecture.svg)
 
 ```mermaid
 flowchart LR
@@ -85,7 +85,7 @@ VPC → EKS(+노드 그룹) → RDS / S3 / ECR → ingress-nginx · cert-manager
 | `notify/` | 생성·삭제 SNS 알림 (메인과 별도 스택) |
 | `bootstrap/` · `backend.tf` | 테라폼 state 저장용 S3 버킷(별도 스택, destroy해도 유지)과 메인의 원격 backend 설정 |
 
-운영 편의: `show-credentials.ps1`(접속 주소·비밀번호 확인), `verify-destroy.ps1`(삭제 후 잔여 리소스 점검).
+운영 편의: `scripts/show-credentials.ps1`(접속 주소·비밀번호 확인), `scripts/verify-destroy.ps1`(삭제 후 잔여 리소스 점검).
 
 ## 5. 배포 흐름
 

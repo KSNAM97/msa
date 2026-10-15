@@ -43,4 +43,4 @@
 
 ---
 
-[프로젝트 홈](../README.md) · [문제 해결](TROUBLESHOOTING.md) · [실습 결과와 한계](RESULTS.md)
+[프로젝트 홈](../../README.md) · [문제 해결](TROUBLESHOOTING.md) · [실습 결과와 한계](RESULTS.md)

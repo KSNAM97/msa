@@ -9,7 +9,7 @@
   - Grafana 알람 규칙 6개(서비스 중지, 파드 CPU, JVM 힙, 5xx, 응답 지연, 노드 CPU) → SNS 이메일
   - Grafana `Spring Boot JVM` 대시보드 추가 (총 7종), NLB 대시보드(`AWS/NetworkELB`)
   - 관리자 콘솔 15초 자동 갱신(폴링)
-- **보안** ([SECURITY.md](docs/SECURITY.md))
+- **보안** ([SECURITY.md](docs/ops/SECURITY.md))
   - RDS 디스크 암호화, S3 암호화·HTTP 거부, ECR 이미지 스캔
   - 서비스 non-root 실행, 파드 보안 설정, nginx 보안 헤더
   - Prometheus Basic 인증, CI 토큰 최소 권한

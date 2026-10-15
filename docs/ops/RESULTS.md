@@ -31,4 +31,4 @@
 
 ---
 
-[프로젝트 홈](../README.md) · [문제 해결](TROUBLESHOOTING.md) · [롤백](ROLLBACK.md)
+[프로젝트 홈](../../README.md) · [문제 해결](TROUBLESHOOTING.md) · [롤백](ROLLBACK.md)

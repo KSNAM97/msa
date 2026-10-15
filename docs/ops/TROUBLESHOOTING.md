@@ -52,4 +52,4 @@
 
 ---
 
-[프로젝트 홈](../README.md) · [실행 방법](RUNBOOK.md) · [롤백](ROLLBACK.md) · [실습 결과](RESULTS.md)
+[프로젝트 홈](../../README.md) · [실행 방법](../guide/RUNBOOK.md) · [롤백](ROLLBACK.md) · [실습 결과](RESULTS.md)

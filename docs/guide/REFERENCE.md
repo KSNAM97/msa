@@ -148,13 +148,13 @@
 | `kubeconfig_cmd` · `argocd_admin_pw_cmd` | 접속 설정/ArgoCD 비밀번호 명령 |
 | `ecr_urls` · `account_id` · `s3_bucket` · `rds_endpoint` | 리소스 정보 |
 
-## 6. 스크립트 (`terraform/*.ps1`, PowerShell)
+## 6. 스크립트 (`terraform/scripts/*.ps1`, PowerShell)
 
 | 스크립트 | 사용 | 설명 |
 |---|---|---|
-| `show-credentials.ps1` | `.\show-credentials.ps1 [-Only admin\|grafana\|argocd\|adminer\|db] [-Save]` | 접속 주소와 비밀번호 표시, `-Save` 는 `password.txt` 저장 |
-| `verify-destroy.ps1` | `.\verify-destroy.ps1` | destroy 후 남은 AWS 리소스 점검(읽기 전용) |
-| `sync-backend.ps1` | `.\sync-backend.ps1` | ECR 계정 ID·S3 버킷·CORS 도메인을 소스에 반영 |
+| `show-credentials.ps1` | `.\scripts\show-credentials.ps1 [-Only admin\|grafana\|argocd\|adminer\|db] [-Save]` | 접속 주소와 비밀번호 표시, `-Save` 는 `password.txt` 저장 |
+| `verify-destroy.ps1` | `.\scripts\verify-destroy.ps1` | destroy 후 남은 AWS 리소스 점검(읽기 전용) |
+| `sync-backend.ps1` | `.\scripts\sync-backend.ps1` | ECR 계정 ID·S3 버킷·CORS 도메인을 소스에 반영 |
 
 ## 7. CI 워크플로 단계 (`.github/workflows/deploy_ordermsa_with_k8s.yml`)
 

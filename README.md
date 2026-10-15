@@ -11,16 +11,16 @@ AWS EKS 위에서 운영되는 **마이크로서비스(MSA) 쇼핑몰**입니다
 
 | 문서 | 내용 |
 |---|---|
-| [실행 방법](docs/RUNBOOK.md) | 만들기 · 확인 · 배포 · 삭제 순서, 문제 해결 (처음 보는 분은 여기부터) |
-| [구조와 폴더 경로](docs/STRUCTURE.md) | 어디에 무엇이 있는지 (폴더 트리, 서비스별 소스, 주소 구성) |
-| [함수/API 참고](docs/REFERENCE.md) | API 목록과 권한, 서비스 메서드, 프론트 함수, 테라폼 변수, 스크립트 |
-| [구성과 주요 스택](docs/ARCHITECTURE.md) | 전체 구성도, 서비스/API, 기술 스택, Terraform 구성, 배포 흐름, 보안 설계 |
-| [문제 해결 기록](docs/TROUBLESHOOTING.md) | 겪은 문제를 증상 · 원인 · 해결로 정리 |
+| [실행 방법](docs/guide/RUNBOOK.md) | 만들기 · 확인 · 배포 · 삭제 순서, 문제 해결 (처음 보는 분은 여기부터) |
+| [구조와 폴더 경로](docs/guide/STRUCTURE.md) | 어디에 무엇이 있는지 (폴더 트리, 서비스별 소스, 주소 구성) |
+| [함수/API 참고](docs/guide/REFERENCE.md) | API 목록과 권한, 서비스 메서드, 프론트 함수, 테라폼 변수, 스크립트 |
+| [구성과 주요 스택](docs/design/ARCHITECTURE.md) | 전체 구성도, 서비스/API, 기술 스택, Terraform 구성, 배포 흐름, 보안 설계 |
+| [문제 해결 기록](docs/ops/TROUBLESHOOTING.md) | 겪은 문제를 증상 · 원인 · 해결로 정리 |
 | [변경 이력](CHANGELOG.md) | 큰 변경을 날짜순으로 정리 |
-| [보안 점검과 조치](docs/SECURITY.md) | 점검한 취약점, 적용한 보안 설정, 남은 항목과 이유 |
-| [롤백](docs/ROLLBACK.md) | 코드 · 매니페스트 · 인프라를 이전 상태로 되돌리는 방법 |
-| [실습 결과와 한계](docs/RESULTS.md) | 확인한 결과 표와 실습용 구성의 한계 |
-| [디자인 가이드](docs/DESIGN.md) | 디자인 원칙, 스타일 토큰, 레이아웃, 페이지 구성, 사용자 흐름, 입력 규칙, 관리자/Grafana 화면 |
+| [보안 점검과 조치](docs/ops/SECURITY.md) | 점검한 취약점, 적용한 보안 설정, 남은 항목과 이유 |
+| [롤백](docs/ops/ROLLBACK.md) | 코드 · 매니페스트 · 인프라를 이전 상태로 되돌리는 방법 |
+| [실습 결과와 한계](docs/ops/RESULTS.md) | 확인한 결과 표와 실습용 구성의 한계 |
+| [디자인 가이드](docs/design/DESIGN.md) | 디자인 원칙, 스타일 토큰, 레이아웃, 페이지 구성, 사용자 흐름, 입력 규칙, 관리자/Grafana 화면 |
 | 샘플 화면 | [**화면 샘플 모음 (바로 보기)**](https://ksnam97.github.io/msa/) — [쇼핑몰](https://ksnam97.github.io/msa/samples/storefront.html) · [관리자](https://ksnam97.github.io/msa/samples/admin-console.html) · [Grafana](https://ksnam97.github.io/msa/samples/grafana-dashboards.html) |
 
 ## 한눈에 보기
@@ -122,17 +122,17 @@ terraform apply
 
 ```powershell
 cd terraform
-.\show-credentials.ps1
+.\scripts\show-credentials.ps1
 ```
 
 | 서비스 | 주소 | 비밀번호 확인 명령 (모두 아이디 `admin`) |
 |---|---|---|
-| 쇼핑몰 관리자 | `https://server.<도메인>/login.html` | `.\show-credentials.ps1 -Only admin` |
-| Grafana | `https://grafana.<도메인>` | `.\show-credentials.ps1 -Only grafana` |
-| ArgoCD | `https://argo.<도메인>` | `.\show-credentials.ps1 -Only argocd` |
-| Prometheus | `https://prometheus.<도메인>` | Basic 인증 (Adminer 와 같은 계정, `terraform/show-credentials.ps1`) |
+| 쇼핑몰 관리자 | `https://server.<도메인>/login.html` | `.\scripts\show-credentials.ps1 -Only admin` |
+| Grafana | `https://grafana.<도메인>` | `.\scripts\show-credentials.ps1 -Only grafana` |
+| ArgoCD | `https://argo.<도메인>` | `.\scripts\show-credentials.ps1 -Only argocd` |
+| Prometheus | `https://prometheus.<도메인>` | Basic 인증 (Adminer 와 같은 계정, `terraform/scripts/show-credentials.ps1`) |
 
-`terraform apply`가 끝나면 이 정보가 리포 루트의 `password.txt`에 **자동으로 저장**됩니다(`credentials.tf`). 이 파일은 `.gitignore`로 git에서 제외되어 내 PC에만 남습니다. 수동으로 다시 저장하려면 `.\show-credentials.ps1 -Save`를 실행합니다.
+`terraform apply`가 끝나면 이 정보가 리포 루트의 `password.txt`에 **자동으로 저장**됩니다(`credentials.tf`). 이 파일은 `.gitignore`로 git에서 제외되어 내 PC에만 남습니다. 수동으로 다시 저장하려면 `.\scripts\show-credentials.ps1 -Save`를 실행합니다.
 
 스크립트 없이 직접 확인하려면 다음과 같습니다.
 

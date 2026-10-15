@@ -48,4 +48,4 @@ Synced 는 Git 과 클러스터가 같다는 뜻이고, Healthy 는 ArgoCD 가 �
 
 ---
 
-[프로젝트 홈](../README.md) · [실행 방법](RUNBOOK.md) · [문제 해결](TROUBLESHOOTING.md)
+[프로젝트 홈](../../README.md) · [실행 방법](../guide/RUNBOOK.md) · [문제 해결](TROUBLESHOOTING.md)

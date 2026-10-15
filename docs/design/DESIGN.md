@@ -141,7 +141,7 @@ CloudWatch는 Grafana 파드의 서비스어카운트에 연결한 **읽기 전�
 
 > 배포 후 화면을 캡처해 `docs/images/`에 넣고 아래 주석을 해제해 연결한다.
 
-<!-- ![메인](images/main.png) -->
-<!-- ![상품 상세](images/detail.png) -->
-<!-- ![관리자](images/admin.png) -->
-<!-- ![Grafana](images/grafana.png) -->
+<!-- ![메인](../images/main.png) -->
+<!-- ![상품 상세](../images/detail.png) -->
+<!-- ![관리자](../images/admin.png) -->
+<!-- ![Grafana](../images/grafana.png) -->

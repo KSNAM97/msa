@@ -108,7 +108,7 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
-  # repo의 argocd-server-insecure-patch.json 과 동일 (TLS는 ingress에서 종료)
+  # repo의 docs/ops/argocd-server-insecure-patch.json 과 동일 (TLS는 ingress에서 종료)
   set {
     name  = "configs.params.server\\.insecure"
     value = "true"

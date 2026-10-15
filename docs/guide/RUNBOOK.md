@@ -61,8 +61,8 @@ kubectl get certificate -A                                            # HTTPS �
 
 ```powershell
 cd terraform
-.\show-credentials.ps1           # 전체 표
-.\show-credentials.ps1 -Only grafana     # 하나만
+.\scripts\show-credentials.ps1           # 전체 표
+.\scripts\show-credentials.ps1 -Only grafana     # 하나만
 ```
 
 | 서비스 | 주소 | 로그인 |
@@ -96,7 +96,7 @@ git push origin main
 ```powershell
 cd terraform
 terraform destroy        # 약 15~20분. 비용이 드는 리소스를 모두 삭제
-.\verify-destroy.ps1     # 남은 리소스 점검 (Route53 존은 기존 존이라 "남음"이 정상)
+.\scripts\verify-destroy.ps1     # 남은 리소스 점검 (Route53 존은 기존 존이라 "남음"이 정상)
 ```
 
 - destroy 때 HTTPS 인증서가 `terraform/cert-backup/` 에 백업되고, 다음 `apply` 에서 복원됩니다(Let's Encrypt 발급 한도 회피).
@@ -113,7 +113,7 @@ terraform destroy        # 약 15~20분. 비용이 드는 리소스를 모두 �
 | 관리자 콘솔 지표가 "가져오지 못했습니다" | Prometheus 파드 상태 확인(`kubectl -n monitoring get pods`) |
 | Grafana CloudWatch 대시보드가 비어 있음 | CloudWatch 지표 수집에 몇 분 소요, 그래도 비면 Grafana 파드의 IRSA 확인 |
 | CI 가 `No cluster found` | 클러스터가 없을 때 push 됨 → `apply` 후 다시 실행 |
-| `password.txt` 가 없음 | `terraform\show-credentials.ps1 -Save` 로 다시 생성 |
+| `password.txt` 가 없음 | `terraform\scripts\show-credentials.ps1 -Save` 로 다시 생성 |
 
 ## 8. 안전 수칙
 

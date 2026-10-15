@@ -13,15 +13,20 @@ aws-msa-backend/                       ← 저장소 루트 (GitHub: KSNAM97/msa
 ├── argocd/                            ← CD: ArgoCD 가 읽는 앱 정의 (GitOps)
 │   ├── root-app.yml                   ← 모든 앱의 부모(App of Apps)
 │   └── apps/                          ← 앱별 정의 (member, product, ordering, apigateway, frontend, hpa, monitoring, services, argocd)
-├── docs/                              ← 문서
-│   ├── ARCHITECTURE.md · DESIGN.md · STRUCTURE.md · REFERENCE.md · RUNBOOK.md
-│   └── samples/                       ← 화면 샘플(HTML, 서버 없이 열람)
+├── CHANGELOG.md                       ← 변경 이력
+├── docs/                              ← 문서 (주제별 폴더)
+│   ├── guide/                         ← RUNBOOK(실행) · STRUCTURE(구조) · REFERENCE(함수/API)
+│   ├── design/                        ← ARCHITECTURE(구성) · DESIGN(화면 디자인)
+│   ├── ops/                           ← TROUBLESHOOTING · ROLLBACK · RESULTS · SECURITY
+│   ├── images/                        ← 구성도(architecture.svg)
+│   └── samples/                       ← 화면 샘플(HTML, 서버 없이 열람, GitHub Pages)
 ├── msa/                               ← 애플리케이션과 쿠버네티스 매니페스트
 │   ├── apigateway/ member/ product/ ordering/   ← Spring Boot 서비스 (각각 src, build.gradle, Dockerfile, k8s/)
 │   ├── frontend/                      ← 정적 웹 (nginx)
 │   └── k8s/                           ← 공용 매니페스트 (ingress, HPA, 모니터링, autoscaler)
 └── terraform/                         ← 인프라 코드
-    ├── *.tf · *.ps1                   ← 메인 스택
+    ├── *.tf                           ← 메인 스택
+    ├── scripts/                       ← 운영 스크립트 (show-credentials · verify-destroy · sync-backend)
     ├── bootstrap/                     ← state 저장용 S3 버킷 (별도 스택)
     └── notify/                        ← 생성·삭제 SNS 알림 (별도 스택)
 ```
@@ -95,7 +100,7 @@ aws-msa-backend/                       ← 저장소 루트 (GitHub: KSNAM97/msa
 | `monitoring.tf` | CloudWatch 알람, 대시보드 |
 | `certs.tf` · `cleanup.tf` | 인증서 백업·복원, destroy 정리 |
 | `ci.tf` · `credentials.tf` | apply 후 GitHub Actions 실행, 비밀번호 `password.txt` 저장 |
-| `show-credentials.ps1` · `verify-destroy.ps1` · `sync-backend.ps1` | 운영 스크립트 |
+| `scripts/show-credentials.ps1` · `scripts/verify-destroy.ps1` · `scripts/sync-backend.ps1` | 운영 스크립트 |
 | `bootstrap/main.tf` | state 버킷 (versioning, 암호화, 공개 차단) |
 | `notify/main.tf` | EventBridge → SNS 이메일 알림 |
 | `cert-backup/` (git 제외) | HTTPS 인증서 백업 (개인키 포함) |
