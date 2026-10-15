@@ -1,131 +1,131 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" font-family="Malgun Gothic, Apple SD Gothic Neo, Noto Sans KR, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="100%" font-family="Malgun Gothic, Apple SD Gothic Neo, Noto Sans KR, sans-serif">
 <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/></marker></defs>
 <rect width="1200" height="900" fill="#FFFFFF"/>
 <rect x="12" y="12" width="1176" height="876" rx="14" fill="#FBFCFD" stroke="#E5E7EB"/>
-<text x="34" y="52" font-size="26" font-weight="800" fill="#1F2937" text-anchor="start">NAM97 MALL</text>
-<text x="212" y="52" font-size="20" font-weight="700" fill="#374151" text-anchor="start">AWS · EKS 프로젝트 구성도</text>
-<text x="34" y="76" font-size="12.5" font-weight="400" fill="#6B7280" text-anchor="start">Terraform 설정과 배포 구조 기준 아키텍처 (ksnam97.com)</text>
+<text x="34" y="52" font-size="31.2" font-weight="800" fill="#1F2937" text-anchor="start">NAM97 MALL</text>
+<text x="262" y="52" font-size="24.0" font-weight="700" fill="#374151" text-anchor="start">AWS · EKS 프로젝트 구성도</text>
+<text x="34" y="76" font-size="15.0" font-weight="400" fill="#6B7280" text-anchor="start">Terraform 설정과 배포 구조 기준 아키텍처 (ksnam97.com)</text>
 <rect x="30" y="95" width="120" height="60" rx="8" fill="#FFF4E0" stroke="#E8890C" stroke-width="1.4"/>
-<text x="90.0" y="123.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">Route 53</text>
-<text x="90.0" y="139.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">기존 호스팅 존</text>
+<text x="90.0" y="123.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">Route 53</text>
+<text x="90.0" y="139.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">기존 호스팅 존</text>
 <rect x="30" y="230" width="120" height="60" rx="8" fill="#E7F0FD" stroke="#3B7DDD" stroke-width="1.4"/>
-<text x="90.0" y="258.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">사용자</text>
-<text x="90.0" y="274.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">브라우저 · HTTPS</text>
+<text x="90.0" y="258.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">사용자</text>
+<text x="90.0" y="274.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">브라우저 · HTTPS</text>
 <circle cx="190" cy="260" r="14" fill="#FFF4E0" stroke="#E8890C" stroke-width="1.6"/>
-<text x="190" y="264" font-size="8.5" font-weight="700" fill="#1F2937" text-anchor="middle">IGW</text>
+<text x="190" y="264" font-size="10.2" font-weight="700" fill="#1F2937" text-anchor="middle">IGW</text>
 <path d="M90,155 V228" fill="none" stroke="#4B5563" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ar)"/>
-<text x="98" y="195" font-size="10.5" font-weight="400" fill="#6B7280" text-anchor="start">DNS 조회</text>
+<text x="98" y="195" font-size="12.6" font-weight="400" fill="#6B7280" text-anchor="start">DNS 조회</text>
 <path d="M150,260 H174" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <rect x="205" y="90" width="625" height="565" rx="12" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="220" y="112" font-size="13" font-weight="700" fill="#374151" text-anchor="start">AWS 서울 리전 (ap-northeast-2)</text>
+<text x="220" y="112" font-size="15.6" font-weight="700" fill="#374151" text-anchor="start">AWS 서울 리전 (ap-northeast-2)</text>
 <rect x="218" y="140" width="600" height="500" rx="10" fill="#F7FBF8" stroke="#3E9B5F" stroke-width="1.4"/>
-<text x="232" y="160" font-size="12.5" font-weight="700" fill="#2F7D4C" text-anchor="start">VPC 10.0.0.0/16 · 노드 서브넷은 프라이빗</text>
+<text x="232" y="160" font-size="15.0" font-weight="700" fill="#2F7D4C" text-anchor="start">VPC 10.0.0.0/16 · 노드 서브넷은 프라이빗</text>
 <path d="M150,125 H512 V235" fill="none" stroke="#4B5563" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ar)"/>
-<text x="300" y="137" font-size="10.5" font-weight="400" fill="#6B7280" text-anchor="start">CNAME (server · argo · grafana · prometheus · db)</text>
+<text x="300" y="137" font-size="12.6" font-weight="400" fill="#6B7280" text-anchor="start">CNAME (server · argo · grafana · prometheus · db)</text>
 <rect x="230" y="170" width="285" height="455" rx="10" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="242" y="189" font-size="12" font-weight="700" fill="#6B7280" text-anchor="start">가용 영역 ap-northeast-2a</text>
+<text x="242" y="189" font-size="14.4" font-weight="700" fill="#6B7280" text-anchor="start">가용 영역 ap-northeast-2a</text>
 <rect x="238" y="196" width="269" height="100" rx="8" fill="#F2F7FD" stroke="#5B8DD6" stroke-width="1.4"/>
-<text x="248" y="212" font-size="11" font-weight="700" fill="#3B6FB8" text-anchor="start">퍼블릭 서브넷</text>
+<text x="248" y="212" font-size="13.2" font-weight="700" fill="#3B6FB8" text-anchor="start">퍼블릭 서브넷</text>
 <rect x="238" y="306" width="269" height="205" rx="8" fill="#F2F7FD" stroke="#5B8DD6" stroke-width="1.4"/>
-<text x="248" y="322" font-size="11" font-weight="700" fill="#3B6FB8" text-anchor="start">프라이빗 서브넷</text>
+<text x="248" y="322" font-size="13.2" font-weight="700" fill="#3B6FB8" text-anchor="start">프라이빗 서브넷</text>
 <rect x="527" y="170" width="285" height="455" rx="10" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="539" y="189" font-size="12" font-weight="700" fill="#6B7280" text-anchor="start">가용 영역 ap-northeast-2c</text>
+<text x="539" y="189" font-size="14.4" font-weight="700" fill="#6B7280" text-anchor="start">가용 영역 ap-northeast-2c</text>
 <rect x="535" y="196" width="269" height="100" rx="8" fill="#F2F7FD" stroke="#5B8DD6" stroke-width="1.4"/>
-<text x="545" y="212" font-size="11" font-weight="700" fill="#3B6FB8" text-anchor="start">퍼블릭 서브넷</text>
+<text x="545" y="212" font-size="13.2" font-weight="700" fill="#3B6FB8" text-anchor="start">퍼블릭 서브넷</text>
 <rect x="535" y="306" width="269" height="205" rx="8" fill="#F2F7FD" stroke="#5B8DD6" stroke-width="1.4"/>
-<text x="545" y="322" font-size="11" font-weight="700" fill="#3B6FB8" text-anchor="start">프라이빗 서브넷</text>
+<text x="545" y="322" font-size="13.2" font-weight="700" fill="#3B6FB8" text-anchor="start">프라이빗 서브넷</text>
 <rect x="244" y="220" width="82" height="36" rx="8" fill="#FFF4E0" stroke="#E8890C" stroke-width="1.4"/>
-<text x="285.0" y="242.0" font-size="12" font-weight="700" fill="#1F2937" text-anchor="middle">NAT × 1</text>
+<text x="285.0" y="242.0" font-size="14.4" font-weight="700" fill="#1F2937" text-anchor="middle">NAT × 1</text>
 <rect x="340" y="232" width="360" height="46" rx="8" fill="#FFF4E0" stroke="#E8890C" stroke-width="1.4"/>
-<text x="520.0" y="253.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">NLB (Network Load Balancer)</text>
-<text x="520.0" y="269.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">TCP 80 / 443 전달 · TLS 는 ingress-nginx</text>
+<text x="520.0" y="253.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">NLB (Network Load Balancer)</text>
+<text x="520.0" y="269.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">TCP 80 / 443 전달 · TLS 는 ingress-nginx</text>
 <path d="M204,260 H338" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <rect x="240" y="330" width="545" height="172" rx="10" fill="#E8F5EC" stroke="#3E9B5F" stroke-width="1.4"/>
-<text x="252" y="348" font-size="12" font-weight="700" fill="#2F7D4C" text-anchor="start">Amazon EKS 1.32 · 관리형 노드 그룹 t3.medium 2~4대 (2개 AZ)</text>
+<text x="252" y="348" font-size="14.4" font-weight="700" fill="#2F7D4C" text-anchor="start">Amazon EKS 1.32 · 노드 t3.medium 2~4대 (2 AZ)</text>
 <rect x="252" y="356" width="521" height="26" rx="6" fill="#FFF4E0" stroke="#E8890C" stroke-width="1.4"/>
-<text x="512" y="374" font-size="11.5" font-weight="700" fill="#1F2937" text-anchor="middle">ingress-nginx · Host 별 라우팅 (cert-manager 인증서)</text>
-<path d="M512,278 V356" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
+<text x="512" y="374" font-size="13.8" font-weight="700" fill="#1F2937" text-anchor="middle">ingress-nginx · Host 별 라우팅 (cert-manager 인증서)</text>
+<path d="M690,278 V356" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <rect x="252" y="392" width="97" height="44" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="300.5" y="412.0" font-size="12" font-weight="700" fill="#1F2937" text-anchor="middle">Frontend</text>
-<text x="300.5" y="428.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">Nginx 정적</text>
+<text x="300.5" y="412.0" font-size="14.4" font-weight="700" fill="#1F2937" text-anchor="middle">Frontend</text>
+<text x="300.5" y="428.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">Nginx 정적</text>
 <rect x="357" y="392" width="97" height="44" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="405.5" y="412.0" font-size="12" font-weight="700" fill="#1F2937" text-anchor="middle">API Gateway</text>
-<text x="405.5" y="428.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">JWT 인증</text>
+<text x="405.5" y="412.0" font-size="14.4" font-weight="700" fill="#1F2937" text-anchor="middle">API Gateway</text>
+<text x="405.5" y="428.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">JWT 인증</text>
 <rect x="462" y="392" width="97" height="44" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="510.5" y="412.0" font-size="12" font-weight="700" fill="#1F2937" text-anchor="middle">Member</text>
-<text x="510.5" y="428.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">회원</text>
+<text x="510.5" y="412.0" font-size="14.4" font-weight="700" fill="#1F2937" text-anchor="middle">Member</text>
+<text x="510.5" y="428.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">회원</text>
 <rect x="567" y="392" width="97" height="44" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="615.5" y="412.0" font-size="12" font-weight="700" fill="#1F2937" text-anchor="middle">Product</text>
-<text x="615.5" y="428.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">상품 · 재고</text>
+<text x="615.5" y="412.0" font-size="14.4" font-weight="700" fill="#1F2937" text-anchor="middle">Product</text>
+<text x="615.5" y="428.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">상품 · 재고</text>
 <rect x="672" y="392" width="97" height="44" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="720.5" y="412.0" font-size="12" font-weight="700" fill="#1F2937" text-anchor="middle">Ordering</text>
-<text x="720.5" y="428.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">주문 · 장바구니</text>
+<text x="720.5" y="412.0" font-size="14.4" font-weight="700" fill="#1F2937" text-anchor="middle">Ordering</text>
+<text x="720.5" y="428.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">주문 · 장바구니</text>
 <rect x="252" y="448" width="97" height="40" rx="8" fill="#F5F6F8" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="300.5" y="472.0" font-size="11" font-weight="700" fill="#1F2937" text-anchor="middle">ArgoCD</text>
+<text x="300.5" y="472.0" font-size="13.2" font-weight="700" fill="#1F2937" text-anchor="middle">ArgoCD</text>
 <rect x="357" y="448" width="97" height="40" rx="8" fill="#F5F6F8" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="405.5" y="472.0" font-size="11" font-weight="700" fill="#1F2937" text-anchor="middle">Prometheus</text>
+<text x="405.5" y="472.0" font-size="13.2" font-weight="700" fill="#1F2937" text-anchor="middle">Prometheus</text>
 <rect x="462" y="448" width="97" height="40" rx="8" fill="#F5F6F8" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="510.5" y="472.0" font-size="11" font-weight="700" fill="#1F2937" text-anchor="middle">Grafana</text>
+<text x="510.5" y="472.0" font-size="13.2" font-weight="700" fill="#1F2937" text-anchor="middle">Grafana</text>
 <rect x="567" y="448" width="97" height="40" rx="8" fill="#F5F6F8" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="615.5" y="472.0" font-size="11" font-weight="700" fill="#1F2937" text-anchor="middle">Autoscaler · HPA</text>
+<text x="615.5" y="472.0" font-size="13.2" font-weight="700" fill="#1F2937" text-anchor="middle">Autoscaler · HPA</text>
 <rect x="672" y="448" width="97" height="40" rx="8" fill="#F5F6F8" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="720.5" y="472.0" font-size="11" font-weight="700" fill="#1F2937" text-anchor="middle">cert-manager</text>
+<text x="720.5" y="472.0" font-size="13.2" font-weight="700" fill="#1F2937" text-anchor="middle">cert-manager</text>
 <rect x="240" y="520" width="545" height="110" rx="8" fill="#FAF8FE" stroke="#7B5CC4" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="252" y="538" font-size="11" font-weight="700" fill="#6A4CB0" text-anchor="start">DB 서브넷 (프라이빗)</text>
+<text x="252" y="538" font-size="13.2" font-weight="700" fill="#6A4CB0" text-anchor="start">DB 서브넷 (프라이빗)</text>
 <rect x="300" y="548" width="250" height="66" rx="8" fill="#F1ECFA" stroke="#7B5CC4" stroke-width="1.4"/>
-<text x="425.0" y="579.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">RDS MySQL 8</text>
-<text x="425.0" y="595.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">db.t4g.micro · Single-AZ · 퍼블릭 접근 없음</text>
+<text x="425.0" y="579.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">RDS MySQL 8</text>
+<text x="425.0" y="595.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">db.t4g.micro · Single-AZ · 퍼블릭 접근 없음</text>
 <rect x="600" y="548" width="170" height="66" rx="8" fill="#FFF4E0" stroke="#E8890C" stroke-width="1.4"/>
-<text x="685.0" y="579.0" font-size="12" font-weight="700" fill="#1F2937" text-anchor="middle">S3 Gateway Endpoint</text>
-<text x="685.0" y="595.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">NAT 우회 (무료)</text>
+<text x="685.0" y="579.0" font-size="14.4" font-weight="700" fill="#1F2937" text-anchor="middle">S3 Gateway Endpoint</text>
+<text x="685.0" y="595.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">NAT 우회 (무료)</text>
 <path d="M425,502 V548" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
-<text x="433" y="530" font-size="10.5" font-weight="400" fill="#6B7280" text-anchor="start">3306</text>
+<text x="433" y="530" font-size="12.6" font-weight="400" fill="#6B7280" text-anchor="start">3306</text>
 <rect x="850" y="90" width="320" height="565" rx="12" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="866" y="112" font-size="13" font-weight="700" fill="#374151" text-anchor="start">저장 · 감사 · 운영 알림</text>
+<text x="866" y="112" font-size="15.6" font-weight="700" fill="#374151" text-anchor="start">저장 · 감사 · 운영 알림</text>
 <rect x="866" y="124" width="288" height="56" rx="8" fill="#E7F0FD" stroke="#3B7DDD" stroke-width="1.4"/>
-<text x="1010.0" y="150.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon S3</text>
-<text x="1010.0" y="166.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">상품 이미지 (products/ 공개 읽기)</text>
+<text x="1010.0" y="150.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon S3</text>
+<text x="1010.0" y="166.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">상품 이미지 (products/ 공개 읽기)</text>
 <rect x="866" y="200" width="288" height="56" rx="8" fill="#E7F0FD" stroke="#3B7DDD" stroke-width="1.4"/>
-<text x="1010.0" y="226.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon ECR</text>
-<text x="1010.0" y="242.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">서비스 이미지 5개</text>
+<text x="1010.0" y="226.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon ECR</text>
+<text x="1010.0" y="242.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">서비스 이미지 5개</text>
 <rect x="866" y="276" width="288" height="56" rx="8" fill="#F5F6F8" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="1010.0" y="302.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">AWS CloudTrail</text>
-<text x="1010.0" y="318.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">API 작업 이력 (생성/삭제) → S3</text>
+<text x="1010.0" y="302.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">AWS CloudTrail</text>
+<text x="1010.0" y="318.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">API 작업 이력 (생성/삭제) → S3</text>
 <rect x="866" y="352" width="288" height="56" rx="8" fill="#FDECEF" stroke="#D6455D" stroke-width="1.4"/>
-<text x="1010.0" y="378.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon CloudWatch</text>
-<text x="1010.0" y="394.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">RDS · EKS 지표 · 로그 · 경보</text>
+<text x="1010.0" y="378.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon CloudWatch</text>
+<text x="1010.0" y="394.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">RDS · EKS 지표 · 로그 · 경보</text>
 <rect x="866" y="428" width="288" height="56" rx="8" fill="#FDECEF" stroke="#D6455D" stroke-width="1.4"/>
-<text x="1010.0" y="454.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon SNS</text>
-<text x="1010.0" y="470.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">생성/삭제 알림 (EventBridge 연동)</text>
+<text x="1010.0" y="454.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon SNS</text>
+<text x="1010.0" y="470.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">생성/삭제 알림 (EventBridge 연동)</text>
 <rect x="866" y="504" width="288" height="56" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="1010.0" y="530.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">운영자 이메일</text>
-<text x="1010.0" y="546.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">구독 확인 후 수신</text>
+<text x="1010.0" y="530.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">운영자 이메일</text>
+<text x="1010.0" y="546.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">구독 확인 후 수신</text>
 <path d="M1010,408 V428" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <path d="M1010,484 V504" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
-<text x="866" y="600" font-size="10.5" font-weight="400" fill="#6B7280" text-anchor="start">Grafana 는 IRSA 로 CloudWatch 를 읽기 전용 조회</text>
-<text x="866" y="618" font-size="10.5" font-weight="400" fill="#6B7280" text-anchor="start">Prometheus 는 노드 · 파드 · ArgoCD 지표 수집</text>
+<text x="866" y="600" font-size="12.6" font-weight="400" fill="#6B7280" text-anchor="start">Grafana 는 IRSA 로 CloudWatch 를 읽기 전용 조회</text>
+<text x="866" y="618" font-size="12.6" font-weight="400" fill="#6B7280" text-anchor="start">Prometheus 는 노드 · 파드 · ArgoCD 지표 수집</text>
 <rect x="30" y="680" width="1140" height="110" rx="12" fill="#F3F8FF" stroke="#3B7DDD" stroke-width="1.4"/>
-<text x="46" y="702" font-size="13" font-weight="700" fill="#2B5FB0" text-anchor="start">CI/CD · 코드에서 클러스터까지</text>
+<text x="46" y="702" font-size="15.6" font-weight="700" fill="#2B5FB0" text-anchor="start">CI/CD · 코드에서 클러스터까지</text>
 <rect x="50" y="716" width="170" height="56" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="135.0" y="742.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">GitHub</text>
-<text x="135.0" y="758.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">main 에 push</text>
+<text x="135.0" y="742.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">GitHub</text>
+<text x="135.0" y="758.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">main 에 push</text>
 <path d="M220,744 H272" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <rect x="272" y="716" width="170" height="56" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="357.0" y="742.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">GitHub Actions</text>
-<text x="357.0" y="758.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">변경된 서비스 빌드</text>
+<text x="357.0" y="742.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">GitHub Actions</text>
+<text x="357.0" y="758.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">변경된 서비스 빌드</text>
 <path d="M442,744 H494" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <rect x="494" y="716" width="170" height="56" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="579.0" y="742.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon ECR</text>
-<text x="579.0" y="758.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">이미지 push (latest)</text>
+<text x="579.0" y="742.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">Amazon ECR</text>
+<text x="579.0" y="758.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">이미지 push (latest)</text>
 <path d="M664,744 H716" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <rect x="716" y="716" width="170" height="56" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="801.0" y="742.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">rollout restart</text>
-<text x="801.0" y="758.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">kubectl (네임스페이스 ksnam97)</text>
+<text x="801.0" y="742.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">rollout restart</text>
+<text x="801.0" y="758.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">kubectl (ksnam97)</text>
 <path d="M886,744 H938" fill="none" stroke="#4B5563" stroke-width="1.5" marker-end="url(#ar)"/>
 <rect x="938" y="716" width="170" height="56" rx="8" fill="#FFFFFF" stroke="#9AA3AF" stroke-width="1.4"/>
-<text x="1023.0" y="742.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">ArgoCD</text>
-<text x="1023.0" y="758.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">Git 매니페스트 동기화</text>
-<text x="34" y="822" font-size="11.5" font-weight="400" fill="#4B5563" text-anchor="start">Terraform: apply 한 번으로 VPC · EKS · RDS · S3 · ECR · DNS · 모니터링 생성, destroy 로 전부 삭제 (인증서는 백업 후 복원)</text>
-<text x="34" y="842" font-size="11.5" font-weight="400" fill="#4B5563" text-anchor="start">실습 범위: NAT 1개 · RDS Single-AZ · 파드 1개 기반 (HPA 로 확장) · Prometheus 는 Basic 인증</text>
-<text x="34" y="862" font-size="11.5" font-weight="400" fill="#6B7280" text-anchor="start">실선: 서비스·배포 흐름   점선: DNS · 알림 연계</text>
+<text x="1023.0" y="742.0" font-size="15.6" font-weight="700" fill="#1F2937" text-anchor="middle">ArgoCD</text>
+<text x="1023.0" y="758.0" font-size="12.6" font-weight="400" fill="#4B5563" text-anchor="middle">Git 매니페스트 동기화</text>
+<text x="34" y="822" font-size="13.8" font-weight="400" fill="#4B5563" text-anchor="start">Terraform: apply 한 번으로 VPC · EKS · RDS · S3 · ECR · DNS · 모니터링 생성, destroy 로 전부 삭제 (인증서는 백업 후 복원)</text>
+<text x="34" y="842" font-size="13.8" font-weight="400" fill="#4B5563" text-anchor="start">실습 범위: NAT 1개 · RDS Single-AZ · 파드 1개 기반 (HPA 로 확장) · Prometheus 는 Basic 인증</text>
+<text x="34" y="862" font-size="13.8" font-weight="400" fill="#6B7280" text-anchor="start">실선: 서비스·배포 흐름   점선: DNS · 알림 연계</text>
 </svg>
