@@ -23,6 +23,14 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail" {
   restrict_public_buckets = true
 }
 
+# 저장 시 암호화(SSE-S3)
+resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail" {
+  bucket = aws_s3_bucket.cloudtrail.id
+  rule {
+    apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
+  }
+}
+
 # 오래된 로그는 자동 삭제 (보관 30일)
 resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail" {
   bucket = aws_s3_bucket.cloudtrail.id
@@ -40,6 +48,15 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      {
+        # 보안: HTTP(암호화 없음) 요청은 모두 거부
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [aws_s3_bucket.cloudtrail.arn, "${aws_s3_bucket.cloudtrail.arn}/*"]
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      },
       {
         Sid       = "AclCheck"
         Effect    = "Allow"

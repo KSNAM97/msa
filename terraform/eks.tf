@@ -18,6 +18,8 @@ module "eks" {
 
   # ponytail: API 서버 공개 엔드포인트. 운영에서는 접근 허용 CIDR 을 제한하거나 private 로 전환
   cluster_endpoint_public_access = true
+  # 보안: API 서버 접근을 허용할 IP 대역 (기본은 전체. GitHub Actions 러너 IP 가 고정이 아니라서. 내 IP 로 줄이려면 variables.tf 참고)
+  cluster_endpoint_public_access_cidrs = var.api_allowed_cidrs
   # terraform 을 실행한 IAM 주체(admin)에게 클러스터 관리자 권한 부여 (helm/kubernetes provider 가 이 권한으로 동작)
   enable_cluster_creator_admin_permissions = true
 

@@ -12,3 +12,4 @@ variable "github_repo" { default = "KSNAM97/msa" }                     # gh CLI 
 variable "trigger_ci" { default = true }                               # apply 완료 후 GitHub Actions 자동 실행 (ci.tf)
 variable "git_repo" { default = "https://github.com/KSNAM97/msa.git" } # ArgoCD 가 읽을 리포 (공개 리포)
 variable "db_instance_class" { default = "db.t4g.micro" }              # RDS 샌드박스: 가장 작은 인스턴스 (data.tf 의 RDS 설명 참고)
+variable "api_allowed_cidrs" { default = ["0.0.0.0/0"] }               # EKS API 서버 접근 허용 대역. CI(GitHub Actions)가 접속하므로 기본은 전체. 로컬만 쓸 때는 ["내IP/32"]

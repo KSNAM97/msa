@@ -9,6 +9,10 @@ resource "aws_ecr_repository" "app" {
   for_each     = toset(local.apps)
   name         = each.key
   force_delete = true
+  # 보안: push 할 때마다 알려진 취약점(CVE)을 자동 스캔하고, 이미지는 저장 시 암호화한다
+  # (태그는 CI 가 latest 하나로 덮어쓰므로 immutable 로는 바꾸지 않는다)
+  image_scanning_configuration { scan_on_push = true }
+  encryption_configuration { encryption_type = "AES256" }
 }
 
 # ---------- S3 (상품 이미지) ----------
@@ -29,17 +33,36 @@ resource "aws_s3_bucket_public_access_block" "images" {
   restrict_public_buckets = false
 }
 
+# 보안: 저장 시 암호화(SSE-S3). 기본값이지만 코드로 명시해 점검 도구/리뷰에서 확인되게 한다
+resource "aws_s3_bucket_server_side_encryption_configuration" "images" {
+  bucket = aws_s3_bucket.images.id
+  rule {
+    apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
+  }
+}
+
 resource "aws_s3_bucket_policy" "images_public_read" {
   bucket = aws_s3_bucket.images.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Sid       = "PublicReadProductImages"
-      Effect    = "Allow"
-      Principal = "*"
-      Action    = "s3:GetObject"                           # 읽기만 허용 (최소 권한)
-      Resource  = "${aws_s3_bucket.images.arn}/products/*" # product-service 가 올리는 경로(products/)로 한정
-    }]
+    Statement = [
+      {
+        Sid       = "PublicReadProductImages"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"                           # 읽기만 허용 (최소 권한)
+        Resource  = "${aws_s3_bucket.images.arn}/products/*" # product-service 가 올리는 경로(products/)로 한정
+      },
+      {
+        # 보안: HTTP(암호화 없음) 요청은 모두 거부 -> HTTPS 로만 접근 가능
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [aws_s3_bucket.images.arn, "${aws_s3_bucket.images.arn}/*"]
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      }
+    ]
   })
   # 공개 차단 설정이 먼저 풀려 있어야 정책 적용이 성공한다
   depends_on = [aws_s3_bucket_public_access_block.images]
@@ -114,6 +137,9 @@ resource "aws_db_instance" "this" {
   skip_final_snapshot = true
   deletion_protection = false
   publicly_accessible = false
+  # 보안: 디스크(저장 데이터)와 스냅샷을 암호화한다 (생성 시점에만 설정 가능 -> 기존 DB 는 교체됨)
+  storage_encrypted     = true
+  copy_tags_to_snapshot = true
 }
 
 # ---------- k8s 네임스페이스 / 시크릿 (manifest의 secretKeyRef) ----------
