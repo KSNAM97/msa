@@ -3,7 +3,7 @@
 #   .\show-credentials.ps1 -Only admin      쇼핑몰 관리자 비밀번호만
 #   .\show-credentials.ps1 -Only grafana    Grafana 비밀번호만
 #   .\show-credentials.ps1 -Only argocd     ArgoCD 비밀번호만
-#   .\show-credentials.ps1 -Only adminer    DB 관리 화면 접속(Basic 인증) 비밀번호만
+#   .\show-credentials.ps1 -Only adminer    DB 관리 화면과 Prometheus 접속(Basic 인증, 같은 비밀번호) 비밀번호만
 #   .\show-credentials.ps1 -Only db         DB(RDS) 비밀번호만
 #   .\show-credentials.ps1 -Save            전체 출력 + 저장소 루트의 password.txt 에 저장
 #       (password.txt 는 루트 .gitignore 로 git 에서 제외됨. 내 PC 에만 남는다. apply 할 때마다 -Save 로 덮어쓰기)
@@ -46,7 +46,7 @@ $rows = @(
   [pscustomobject]@{ 서비스 = 'ArgoCD';        주소 = "https://argo.$Domain";              아이디 = 'admin'; 비밀번호 = (Get-ArgoPw) },
   [pscustomobject]@{ 서비스 = 'DB 관리 접속(Basic 인증)'; 주소 = "https://db.$Domain";            아이디 = 'admin'; 비밀번호 = (Get-AdminerPw) },
   [pscustomobject]@{ 서비스 = 'DB 로그인(Adminer 화면)';   주소 = '서버=RDS 주소(자동 입력)';   아이디 = 'admin'; 비밀번호 = (Get-DbPw) },
-  [pscustomobject]@{ 서비스 = 'Prometheus';    주소 = "https://prometheus.$Domain";        아이디 = '(로그인 없음)'; 비밀번호 = '-' }
+  [pscustomobject]@{ 서비스 = 'Prometheus(Basic 인증)'; 주소 = "https://prometheus.$Domain"; 아이디 = 'admin'; 비밀번호 = (Get-AdminerPw) }
 )
 $rows | Format-Table -AutoSize
 
