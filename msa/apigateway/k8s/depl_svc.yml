@@ -17,9 +17,19 @@ spec:
       labels:
         app: apigateway
     spec:
+      # 보안: root 로 실행 금지, 권한 상승 금지, 불필요한 리눅스 capability 전부 제거
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: apigateway-container
         image: 872792314844.dkr.ecr.ap-northeast-2.amazonaws.com/apigateway:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         ports:
         - containerPort: 8080
         # JWT 검증 키 (member 가 서명에 쓰는 키와 동일해야 함). 테라폼이 만든 시크릿 jwt-secret 에서 주입

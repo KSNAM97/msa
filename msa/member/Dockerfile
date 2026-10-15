@@ -16,5 +16,9 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=stage1 /app/build/libs/*.jar app.jar
 
+# 보안: root 가 아닌 일반 사용자(uid 1000)로 실행한다 (컨테이너가 탈취돼도 권한이 제한됨)
+RUN addgroup -S -g 1000 app && adduser -S -u 1000 -G app app
+USER 1000
+
 # 실행 : CMD 또는 ENTRYPOINT를 통해 컨테이너를 배열 형태의 명령어로 실행
 ENTRYPOINT ["java", "-jar", "app.jar"]
