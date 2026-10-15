@@ -30,7 +30,13 @@
                  pattern="(?=.*[A-Za-z])(?=.*\d)\S{8,64}" title="8~64자, 영문과 숫자를 모두 포함 (공백 불가)">
           <small style="color:var(--muted)">8~64자, 영문과 숫자를 모두 포함 (공백 불가)</small>
         </div>
-        <button class="btn btn-primary btn-lg" type="submit" style="width:100%">가입하기</button>
+        <div class="field">
+          <label for="password2">비밀번호 확인</label>
+          <input id="password2" type="password" maxlength="64" required autocomplete="new-password">
+          <!-- 입력하는 동안 두 비밀번호가 같은지 바로 알려준다 -->
+          <small id="pwMatch" style="color:var(--muted)">비밀번호를 한 번 더 입력해주세요</small>
+        </div>
+        <button class="btn btn-primary btn-lg" id="signupBtn" type="submit" style="width:100%">가입하기</button>
         <div id="signupMessage" class="message"></div>
       </form>
     </section>
@@ -42,9 +48,26 @@
     renderLayout();   // 공통 헤더/푸터 (app.js)
     // 가입 요청: POST /member-service/member/create (JSON). 인증 불필요(게이트웨이 공개 경로)
     // 아이디/이메일 중복이면 서버가 오류를 돌려주므로 실패 메시지로 안내한다
+    // 비밀번호 확인: 입력할 때마다 일치 여부를 표시한다 (서버에는 확인값을 보내지 않고, 화면에서만 검사)
+    function checkMatch() {
+      const a = document.getElementById('password').value, b = document.getElementById('password2').value, el = document.getElementById('pwMatch');
+      if (!b) { el.textContent = '비밀번호를 한 번 더 입력해주세요'; el.style.color = 'var(--muted)'; }
+      else if (a === b) { el.textContent = '비밀번호가 일치합니다'; el.style.color = 'var(--ok)'; }
+      else { el.textContent = '비밀번호가 일치하지 않습니다'; el.style.color = 'var(--danger)'; }
+    }
+    document.getElementById('password').addEventListener('input', checkMatch);
+    document.getElementById('password2').addEventListener('input', checkMatch);
+
     document.getElementById('signupForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       const v = function (id) { return document.getElementById(id).value; };
+      if (v('password') !== v('password2')) {   // 서버로 보내기 전에 막는다
+        showMessage('signupMessage', '비밀번호와 비밀번호 확인이 일치하지 않습니다.', 'error');
+        return;
+      }
+      const btn = document.getElementById('signupBtn');
+      if (btn.disabled) return;   // 중복 제출 방지
+      btn.disabled = true;
       try {
         await apiRequest('/member-service/member/create', {
           method: 'POST',
@@ -53,7 +76,9 @@
         showMessage('signupMessage', '가입이 완료되었습니다. 로그인 페이지로 이동합니다.', 'success');
         setTimeout(function () { window.location.href = '/login.html'; }, 700);
       } catch (err) {
-        showMessage('signupMessage', '가입에 실패했습니다. 아이디/이메일 중복 여부를 확인해주세요.', 'error');
+        btn.disabled = false;
+        // 서버가 돌려준 안내(이메일 형식, 비밀번호 규칙, 중복 등)를 그대로 보여준다
+        showMessage('signupMessage', (err.message || '가입에 실패했습니다.').slice(0, 120), 'error');
       }
     });
   </script>
