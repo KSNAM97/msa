@@ -233,6 +233,7 @@ resource "kubernetes_secret" "grafana" {
   data = {
     GF_SECURITY_ADMIN_USER     = "admin"
     GF_SECURITY_ADMIN_PASSWORD = random_password.grafana.result
+    SNS_TOPIC_ARN              = data.aws_sns_topic.alerts.arn # Grafana 알람 연락처(SNS) 토픽. grafana-alerting.yml 이 $__env{SNS_TOPIC_ARN} 로 읽는다
   }
 }
 

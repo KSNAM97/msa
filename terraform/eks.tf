@@ -96,6 +96,7 @@ module "grafana_irsa" {
   role_name = "${var.cluster_name}-grafana-cloudwatch"
   role_policy_arns = {
     cloudwatch_read = "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess" # 지표/로그 조회만 가능, 생성/삭제/수정 불가
+    sns_publish     = aws_iam_policy.order_alerts.arn                    # 알람 메일용: 알림 토픽 1개에 Publish 만 가능 (order_alerts.tf)
   }
 
   oidc_providers = {

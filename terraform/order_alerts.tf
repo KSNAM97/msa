@@ -3,6 +3,7 @@
 #   - 토픽은 notify 스택(terraform/notify)이 만든 "nam97-aws-resource-alerts" 를 그대로 쓴다.
 #     (그 스택은 destroy 때 같이 지워지지 않고 이메일 구독 확인도 유지되므로, 이 인프라를 만들고 지울 때마다 구독을 다시 확인할 필요가 없다)
 #     -> notify 스택을 먼저 apply 해 두어야 한다. 없으면 plan 에서 토픽을 찾지 못한다는 오류가 난다.
+#   - 같은 토픽에 Grafana 알람(monitoring.tf/grafana_irsa)도 발행한다. 아래 정책을 두 역할이 함께 쓴다
 #   - 인증은 키 저장 없이 IRSA(서비스어카운트에 연결한 IAM 역할)로 한다. 권한은 "이 토픽에 Publish 만" 허용 (최소 권한)
 # =============================================================================
 data "aws_sns_topic" "alerts" {
@@ -10,8 +11,8 @@ data "aws_sns_topic" "alerts" {
 }
 
 resource "aws_iam_policy" "order_alerts" {
-  name        = "${var.cluster_name}-ordering-sns-publish"
-  description = "ordering service can publish order alerts to one SNS topic"
+  name        = "${var.cluster_name}-sns-publish-alerts"
+  description = "publish alerts to one SNS topic (used by ordering service and grafana)"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{

@@ -11,7 +11,7 @@
 | HTTPS | 도메인 5개(server, argo, grafana, prometheus, db) 인증서 발급·복원 후 접속 |
 | 로드밸런서 교체 | Classic ELB → NLB 교체, 타깃 정상, DNS 전환, 예전 ELB·보안그룹 삭제 |
 | 인증서 백업 | destroy 때 저장, apply 때 복원해서 Let's Encrypt 발급 한도 회피 |
-| 모니터링 | Prometheus 수집, Grafana 대시보드 6종(개요, 쿠버네티스, RDS, EC2, NLB, 로그) |
+| 모니터링 | Prometheus 수집, Grafana 대시보드 7종(개요, JVM, 쿠버네티스, RDS, EC2, NLB, 로그)과 알람 규칙 6개(서비스 중지, CPU, 힙, 5xx, 응답 지연, 노드 CPU) → SNS 이메일 |
 | 알림 | 리소스 생성·삭제 이메일(SNS + EventBridge), CloudWatch 경보 |
 | 앱 기능 | 가입·로그인, 상품 등록·삭제, 장바구니 주문, 주문 취소, 관리자 콘솔 |
 | 원격 state | S3 백엔드 + 잠금 파일, 이전 후 plan 에서 No changes |

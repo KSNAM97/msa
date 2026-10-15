@@ -37,6 +37,9 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards
             - name: dashboards
               mountPath: /var/lib/grafana/dashboards
+            # 알람 규칙 + SNS 연락처 (grafana-alerting.yml). 토픽 ARN 은 grafana-secret 의 SNS_TOPIC_ARN 환경변수로 들어온다
+            - name: alerting
+              mountPath: /etc/grafana/provisioning/alerting
           resources:
           # 컨테이너가 사용할수 있는 리소스의 최대치
             limits:
@@ -56,6 +59,9 @@ spec:
         - name: dashboards
           configMap:
             name: grafana-dashboards
+        - name: alerting
+          configMap:
+            name: grafana-alerting
 ---
 apiVersion: v1
 kind: Service
