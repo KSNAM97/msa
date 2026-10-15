@@ -13,7 +13,13 @@ terraform {
   }
 }
 
-provider "aws" { region = var.region }
+# 모든 AWS 리소스에 공통 태그 자동 부여: 비용 탐색기(Cost Explorer)에서 Environment=sandbox 로 이 프로젝트 비용만 필터링 가능
+provider "aws" {
+  region = var.region
+  default_tags {
+    tags = { Project = "nam97-mall", Environment = "sandbox", ManagedBy = "terraform" }
+  }
+}
 
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint

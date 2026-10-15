@@ -85,17 +85,31 @@ resource "aws_db_subnet_group" "this" {
   subnet_ids = module.vpc.private_subnets
 }
 
+# 샌드박스(비용 최소화) 프로파일: 가장 작은 인스턴스 + 단일 AZ + 최소 스토리지 + 백업/모니터링 부가기능 끔.
+# - db.t4g.micro: Graviton(ARM) 최소 사양. 신규 계정의 RDS 프리티어(750시간/월)와 같은 급
+# - multi_az=false: 대기(standby) 인스턴스가 없어 비용이 절반. 대신 AZ 장애 시 중단됨(학습용이라 허용)
+# - backup_retention_period=0: 자동 백업 끔(스냅샷 비용 없음). 데이터 복구 불가 -> 운영에서는 7 이상
+# - performance_insights/모니터링 끔: 추가 요금 방지
+# 비용의 대부분은 RDS 가 아니라 EKS 제어면/NAT/노드이므로, 안 쓸 때는 destroy 하는 것이 가장 큰 절감이다.
 resource "aws_db_instance" "this" {
-  identifier             = "${var.cluster_name}-mysql"
-  engine                 = "mysql"
-  engine_version         = "8.0"
-  instance_class         = "db.t3.micro"
-  allocated_storage      = 20
-  db_name                = "ordermsa"
-  username               = "admin"
-  password               = random_password.db.result
-  db_subnet_group_name   = aws_db_subnet_group.this.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  identifier        = "${var.cluster_name}-mysql"
+  engine            = "mysql"
+  engine_version    = "8.0"
+  instance_class    = var.db_instance_class
+  allocated_storage = 20
+  storage_type      = "gp2" # 최소 20GB 에서 가장 저렴한 범용 SSD
+  multi_az          = false
+
+  backup_retention_period      = 0
+  performance_insights_enabled = false
+  monitoring_interval          = 0
+  auto_minor_version_upgrade   = true
+  apply_immediately            = true
+  db_name                      = "ordermsa" # 서비스들이 공유하는 DB 이름 (application-prod.yml 의 URL 과 일치)
+  username                     = "admin"
+  password                     = random_password.db.result
+  db_subnet_group_name         = aws_db_subnet_group.this.name
+  vpc_security_group_ids       = [aws_security_group.rds.id]
   # 학습/개발용 설정: destroy 시 최종 스냅샷 없이 바로 삭제. 운영에서는 true/false 를 반대로 바꿀 것
   skip_final_snapshot = true
   deletion_protection = false
