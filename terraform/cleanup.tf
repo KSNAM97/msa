@@ -32,7 +32,7 @@ resource "terraform_data" "pre_destroy" {
   depends_on = [helm_release.argocd_root, kubernetes_namespace.soldesk, kubernetes_namespace.monitoring]
 }
 
-# 2) ingress-nginx 삭제 후 NLB가 완전히 사라질 때까지 대기 (vpc 삭제 전)
+# 2) ingress-nginx 삭제 후 로드밸런서가 완전히 사라질 때까지 대기 (vpc 삭제 전)
 resource "terraform_data" "wait_lb_gone" {
   input = { vpc_id = module.vpc.vpc_id, region = var.region }
 

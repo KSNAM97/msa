@@ -7,7 +7,7 @@
 ```mermaid
 flowchart LR
   user([사용자 / 관리자]) -->|HTTPS| r53[Route53<br/>ksnam97.com]
-  r53 --> nlb[NLB]
+  r53 --> nlb[로드밸런서 ELB]
   nlb --> ingress[ingress-nginx<br/>+ cert-manager Let's Encrypt]
 
   subgraph EKS[EKS 클러스터 - 관리형 노드 그룹 + Cluster Autoscaler]

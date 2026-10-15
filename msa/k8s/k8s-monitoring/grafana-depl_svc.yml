@@ -13,7 +13,7 @@ spec:
       labels:
         app: grafana
     spec:
-      # CloudWatch(RDS/EC2/NLB/Logs) 읽기 권한이 연결된 서비스어카운트 (테라폼이 IRSA 역할과 함께 생성, addons.tf)
+      # CloudWatch(RDS/EC2/ELB/Logs) 읽기 권한이 연결된 서비스어카운트 (테라폼이 IRSA 역할과 함께 생성, addons.tf)
       serviceAccountName: grafana
       containers:
         - name: grafana

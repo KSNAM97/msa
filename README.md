@@ -32,7 +32,7 @@ AWS EKS 위에서 운영되는 **마이크로서비스(MSA) 쇼핑몰**입니다
 ```mermaid
 flowchart LR
   user([사용자]) -->|HTTPS| dns[Route53]
-  dns --> nlb[NLB]
+  dns --> nlb[로드밸런서 ELB]
   nlb --> ingress[ingress-nginx<br/>+ cert-manager]
   subgraph EKS[EKS 클러스터]
     ingress -->|/| fe[Frontend<br/>nginx 정적 웹]

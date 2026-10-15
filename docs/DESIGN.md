@@ -112,7 +112,7 @@ flowchart LR
 | Kubernetes 클러스터 | 노드/파드 CPU·메모리·네트워크·디스크, 수집 대상 상태 | Prometheus |
 | Amazon RDS | CPU, 연결, 여유 스토리지/메모리, IOPS, 지연, 네트워크 | CloudWatch |
 | Amazon EC2 노드 | 워커 노드 CPU, 네트워크, 디스크 | CloudWatch |
-| NLB 타깃 그룹 | 정상/비정상 타깃, 활성/신규 연결, 처리 바이트, 리셋 | CloudWatch |
+| 로드밸런서 (Classic ELB) | 정상/비정상 인스턴스, 요청, 지연, 대기열, 처리 바이트 | CloudWatch |
 | CloudWatch Logs | EKS 컨트롤 플레인 로그 유입량 | CloudWatch |
 
 CloudWatch는 Grafana 파드의 서비스어카운트에 연결한 **읽기 전용 IAM 역할(IRSA)** 로 읽는다. 키를 저장하지 않는다.

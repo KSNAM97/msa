@@ -45,7 +45,7 @@ module "eks" {
       type        = "ingress"
       self        = true
     }
-    # NLB가 ingress 파드가 없는 노드로 보내면 노드 간 443 으로 전달됨
+    # 로드밸런서가 ingress 파드가 없는 노드로 보내면 노드 간 443 으로 전달됨
     ingress_self_443 = {
       description = "Node to node HTTPS 443 (NLB to ingress)"
       protocol    = "tcp"
@@ -85,7 +85,7 @@ module "autoscaler_irsa" {
   }
 }
 
-# Grafana 가 CloudWatch(RDS/EC2/NLB/Logs 지표)를 읽기 위한 IAM 역할 (IRSA).
+# Grafana 가 CloudWatch(RDS/EC2/ELB/Logs 지표)를 읽기 위한 IAM 역할 (IRSA).
 # 키를 저장하지 않고 monitoring:grafana 서비스어카운트로만 역할을 맡을 수 있게 제한하며, 권한은 "읽기 전용"만 준다.
 module "grafana_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"

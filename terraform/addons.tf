@@ -46,7 +46,7 @@ resource "helm_release" "metrics_server" {
   depends_on = [module.eks]
 }
 
-# 외부 진입점: NLB(로드밸런서)를 만들고 도메인별(Host)로 서비스에 라우팅한다. ingress 매니페스트의 class "nginx" 와 연결
+# 외부 진입점: 로드밸런서(클래식 ELB)를 만들고 도메인별(Host)로 서비스에 라우팅한다. ingress 매니페스트의 class "nginx" 와 연결
 resource "helm_release" "ingress_nginx" {
   name             = "ingress-nginx"
   repository       = "https://kubernetes.github.io/ingress-nginx"

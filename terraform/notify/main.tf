@@ -37,7 +37,7 @@ locals {
     "CreateDBInstance", "DeleteDBInstance",                                 # RDS
     "CreateVpc", "DeleteVpc",                                               # VPC
     "CreateNatGateway", "DeleteNatGateway",                                 # NAT (시간당 과금)
-    "CreateLoadBalancer", "DeleteLoadBalancer",                             # NLB (ingress-nginx 가 생성)
+    "CreateLoadBalancer", "DeleteLoadBalancer",                             # 로드밸런서 (ingress-nginx 가 생성)
     "CreateRepository", "DeleteRepository",                                 # ECR
     "CreateBucket", "DeleteBucket",                                         # S3
   ]

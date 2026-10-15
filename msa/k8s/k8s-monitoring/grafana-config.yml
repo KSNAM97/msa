@@ -6,9 +6,12 @@
 #        - NAM97 MALL 개요 : 서비스 상태/요청/에러/응답시간/JVM            (Prometheus)
 #        - Kubernetes 클러스터 : 노드/파드 CPU, 메모리, 네트워크, 디스크   (Prometheus)
 #        - Amazon RDS : DB CPU/연결/스토리지/IOPS/지연                      (CloudWatch)
-#        - Amazon EC2 노드 : 워커 노드 CPU/네트워크/디스크                  (CloudWatch)
-#        - NLB 타깃 그룹 : 로드밸런서 타깃 정상/비정상, 연결 수, 트래픽     (CloudWatch)
+#        - Amazon EC2 노드 : 워커 노드 CPU/네트워크, EBS 읽기/쓰기          (CloudWatch)
+#        - 로드밸런서(Classic ELB) : 정상/비정상 인스턴스, 요청, 지연, 대기열 (CloudWatch)
 #        - CloudWatch Logs : EKS 컨트롤 플레인 로그 유입량                  (CloudWatch)
+# [CloudWatch 질의 규칙] 모든 CloudWatch 패널은 검색식(SEARCH) 형태로 작성한다. 일반(빌더) 형식은 Grafana 13 에서 No data 가 나왔다.
+#   - 삭제된 옛 EC2/로드밸런서의 지표까지 잡히므로 SORT(..., MAX, DESC, N) 으로 값이 큰 상위 N개만 보여준다.
+#   - ingress-nginx 가 만든 로드밸런서는 NLB 가 아니라 클래식 ELB(AWS/ELB)다. 로드밸런서 종류가 바뀌면 이 대시보드의 네임스페이스도 바꾼다.
 # 대시보드는 읽기 전용(코드로 관리)이다. 수정하려면 이 파일(또는 생성 스크립트)을 고치고 push 한다 (ArgoCD 가 반영).
 # RDS 대시보드의 DB 식별자(my-cluster-mysql)는 terraform 의 "${var.cluster_name}-mysql" 과 같아야 한다.
 apiVersion: v1
@@ -1216,16 +1219,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "CPUUtilization",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"CPUUtilization\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
             }
           ]
         },
@@ -1276,16 +1276,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "DatabaseConnections",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"DatabaseConnections\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
             }
           ]
         },
@@ -1344,16 +1341,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "FreeStorageSpace",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"FreeStorageSpace\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
             }
           ]
         },
@@ -1404,16 +1398,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "FreeableMemory",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"FreeableMemory\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
             }
           ]
         },
@@ -1458,16 +1449,14 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "CPUUtilization",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"CPUUtilization\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Average",
+              "label": "CPU"
             }
           ]
         },
@@ -1512,16 +1501,14 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "DatabaseConnections",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"DatabaseConnections\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Average",
+              "label": "연결"
             }
           ]
         },
@@ -1566,16 +1553,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "ReadIOPS",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"ReadIOPS\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
               "id": "",
+              "period": "300",
+              "statistic": "Average",
               "label": "읽기"
             },
             {
@@ -1585,16 +1569,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "WriteIOPS",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"WriteIOPS\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
               "id": "",
+              "period": "300",
+              "statistic": "Average",
               "label": "쓰기"
             }
           ]
@@ -1640,16 +1621,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "ReadLatency",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"ReadLatency\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
               "id": "",
+              "period": "300",
+              "statistic": "Average",
               "label": "읽기"
             },
             {
@@ -1659,16 +1637,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "WriteLatency",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"WriteLatency\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
               "id": "",
+              "period": "300",
+              "statistic": "Average",
               "label": "쓰기"
             }
           ]
@@ -1714,16 +1689,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "NetworkReceiveThroughput",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"NetworkReceiveThroughput\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
               "id": "",
+              "period": "300",
+              "statistic": "Average",
               "label": "수신"
             },
             {
@@ -1733,16 +1705,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "NetworkTransmitThroughput",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"NetworkTransmitThroughput\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
               "id": "",
+              "period": "300",
+              "statistic": "Average",
               "label": "송신"
             }
           ]
@@ -1788,16 +1757,14 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/RDS",
-              "metricName": "FreeStorageSpace",
-              "dimensions": {
-                "DBInstanceIdentifier": "my-cluster-mysql"
-              },
-              "statistic": "Average",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/RDS,DBInstanceIdentifier} MetricName=\"FreeStorageSpace\" DBInstanceIdentifier=\"my-cluster-mysql\"', 'Average', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Average",
+              "label": "여유 스토리지"
             }
           ]
         }
@@ -1824,7 +1791,7 @@ data:
         {
           "id": 1,
           "type": "timeseries",
-          "title": "CPU 사용률 (인스턴스별)",
+          "title": "CPU 사용률 (인스턴스별, 상위 8)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -1864,7 +1831,7 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"CPUUtilization\"', 'Average', 300)",
+              "expression": "SORT(SEARCH('{AWS/EC2,InstanceId} MetricName=\"CPUUtilization\" ', 'Average', 300), MAX, DESC, 8)",
               "region": "default",
               "id": "",
               "period": "300",
@@ -1875,7 +1842,7 @@ data:
         {
           "id": 2,
           "type": "timeseries",
-          "title": "네트워크 수신 (바이트)",
+          "title": "네트워크 수신 (상위 8)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -1915,18 +1882,18 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"NetworkIn\"', 'Average', 300)",
+              "expression": "SORT(SEARCH('{AWS/EC2,InstanceId} MetricName=\"NetworkIn\" ', 'Sum', 300), MAX, DESC, 8)",
               "region": "default",
               "id": "",
               "period": "300",
-              "statistic": "Average"
+              "statistic": "Sum"
             }
           ]
         },
         {
           "id": 3,
           "type": "timeseries",
-          "title": "네트워크 송신 (바이트)",
+          "title": "네트워크 송신 (상위 8)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -1966,18 +1933,18 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"NetworkOut\"', 'Average', 300)",
+              "expression": "SORT(SEARCH('{AWS/EC2,InstanceId} MetricName=\"NetworkOut\" ', 'Sum', 300), MAX, DESC, 8)",
               "region": "default",
               "id": "",
               "period": "300",
-              "statistic": "Average"
+              "statistic": "Sum"
             }
           ]
         },
         {
           "id": 4,
           "type": "timeseries",
-          "title": "디스크 읽기 (바이트)",
+          "title": "EBS 읽기 (볼륨별, 상위 8)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2017,18 +1984,18 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"DiskReadBytes\"', 'Average', 300)",
+              "expression": "SORT(SEARCH('{AWS/EBS,VolumeId} MetricName=\"VolumeReadBytes\" ', 'Sum', 300), MAX, DESC, 8)",
               "region": "default",
               "id": "",
               "period": "300",
-              "statistic": "Average"
+              "statistic": "Sum"
             }
           ]
         },
         {
           "id": 5,
           "type": "timeseries",
-          "title": "디스크 쓰기 (바이트)",
+          "title": "EBS 쓰기 (볼륨별, 상위 8)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2068,24 +2035,24 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"DiskWriteBytes\"', 'Average', 300)",
+              "expression": "SORT(SEARCH('{AWS/EBS,VolumeId} MetricName=\"VolumeWriteBytes\" ', 'Sum', 300), MAX, DESC, 8)",
               "region": "default",
               "id": "",
               "period": "300",
-              "statistic": "Average"
+              "statistic": "Sum"
             }
           ]
         }
       ]
     }
-  nam97-nlb.json: |
+  nam97-elb.json: |
     {
-      "uid": "nam97-nlb",
-      "title": "NLB 타깃 그룹 (CloudWatch)",
+      "uid": "nam97-elb",
+      "title": "로드밸런서 (CloudWatch, Classic ELB)",
       "tags": [
         "nam97",
         "cloudwatch",
-        "nlb"
+        "elb"
       ],
       "timezone": "browser",
       "schemaVersion": 39,
@@ -2099,7 +2066,7 @@ data:
         {
           "id": 1,
           "type": "stat",
-          "title": "정상 타깃",
+          "title": "정상 인스턴스",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2145,7 +2112,7 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"HealthyHostCount\"', 'Minimum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"HealthyHostCount\" ', 'Minimum', 60), MAX, DESC, 1)",
               "region": "default",
               "id": "",
               "period": "60",
@@ -2156,7 +2123,7 @@ data:
         {
           "id": 2,
           "type": "stat",
-          "title": "비정상 타깃",
+          "title": "비정상 인스턴스",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2206,7 +2173,7 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"UnHealthyHostCount\"', 'Maximum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"UnHealthyHostCount\" ', 'Maximum', 60), MAX, DESC, 1)",
               "region": "default",
               "id": "",
               "period": "60",
@@ -2217,7 +2184,7 @@ data:
         {
           "id": 3,
           "type": "stat",
-          "title": "활성 연결",
+          "title": "처리 바이트 (5분)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2230,7 +2197,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "short",
+              "unit": "bytes",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -2263,18 +2230,18 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"ActiveFlowCount\"', 'Average', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"EstimatedProcessedBytes\" ', 'Sum', 300), MAX, DESC, 1)",
               "region": "default",
               "id": "",
-              "period": "60",
-              "statistic": "Average"
+              "period": "300",
+              "statistic": "Sum"
             }
           ]
         },
         {
           "id": 4,
           "type": "stat",
-          "title": "신규 연결 (분당)",
+          "title": "대기열 길이 (최대)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2294,6 +2261,10 @@ data:
                   {
                     "color": "green",
                     "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 100
                   }
                 ]
               }
@@ -2320,18 +2291,18 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"NewFlowCount\"', 'Sum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"SurgeQueueLength\" ', 'Maximum', 300), MAX, DESC, 1)",
               "region": "default",
               "id": "",
-              "period": "60",
-              "statistic": "Sum"
+              "period": "300",
+              "statistic": "Maximum"
             }
           ]
         },
         {
           "id": 5,
           "type": "timeseries",
-          "title": "정상 / 비정상 타깃 수",
+          "title": "정상 / 비정상 인스턴스 수",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2371,11 +2342,12 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"HealthyHostCount\"', 'Minimum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"HealthyHostCount\" ', 'Minimum', 60), MAX, DESC, 4)",
               "region": "default",
               "id": "",
               "period": "60",
-              "statistic": "Minimum"
+              "statistic": "Minimum",
+              "label": "정상"
             },
             {
               "refId": "B",
@@ -2386,67 +2358,17 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"UnHealthyHostCount\"', 'Maximum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"UnHealthyHostCount\" ', 'Maximum', 60), MAX, DESC, 4)",
               "region": "default",
               "id": "",
               "period": "60",
-              "statistic": "Maximum"
+              "statistic": "Maximum",
+              "label": "비정상"
             }
           ]
         },
         {
           "id": 6,
-          "type": "timeseries",
-          "title": "활성 연결 수",
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "cloudwatch"
-          },
-          "gridPos": {
-            "x": 12,
-            "y": 4,
-            "w": 12,
-            "h": 8
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short",
-              "custom": {
-                "lineWidth": 2,
-                "fillOpacity": 10
-              }
-            },
-            "overrides": []
-          },
-          "options": {
-            "legend": {
-              "displayMode": "list",
-              "placement": "bottom"
-            },
-            "tooltip": {
-              "mode": "multi"
-            }
-          },
-          "targets": [
-            {
-              "refId": "A",
-              "datasource": {
-                "type": "cloudwatch",
-                "uid": "cloudwatch"
-              },
-              "queryMode": "Metrics",
-              "metricQueryType": 0,
-              "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"ActiveFlowCount\"', 'Average', 60)",
-              "region": "default",
-              "id": "",
-              "period": "60",
-              "statistic": "Average"
-            }
-          ]
-        },
-        {
-          "id": 7,
           "type": "timeseries",
           "title": "처리 바이트",
           "datasource": {
@@ -2454,8 +2376,8 @@ data:
             "uid": "cloudwatch"
           },
           "gridPos": {
-            "x": 0,
-            "y": 12,
+            "x": 12,
+            "y": 4,
             "w": 12,
             "h": 8
           },
@@ -2488,24 +2410,24 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"ProcessedBytes\"', 'Sum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"EstimatedProcessedBytes\" ', 'Sum', 300), MAX, DESC, 4)",
               "region": "default",
               "id": "",
-              "period": "60",
+              "period": "300",
               "statistic": "Sum"
             }
           ]
         },
         {
-          "id": 8,
+          "id": 7,
           "type": "timeseries",
-          "title": "연결 리셋 (타깃/클라이언트)",
+          "title": "요청 수",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
           },
           "gridPos": {
-            "x": 12,
+            "x": 0,
             "y": 12,
             "w": 12,
             "h": 8
@@ -2539,11 +2461,114 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"TCP_Target_Reset_Count\"', 'Sum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"RequestCount\" ', 'Sum', 300), MAX, DESC, 4)",
               "region": "default",
               "id": "",
-              "period": "60",
+              "period": "300",
               "statistic": "Sum"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "지연 시간",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"Latency\" ', 'Average', 300), MAX, DESC, 4)",
+              "region": "default",
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "대기열 길이 / 넘침",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 20,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"SurgeQueueLength\" ', 'Maximum', 300), MAX, DESC, 4)",
+              "region": "default",
+              "id": "",
+              "period": "300",
+              "statistic": "Maximum",
+              "label": "대기열"
             },
             {
               "refId": "B",
@@ -2554,10 +2579,62 @@ data:
               "queryMode": "Metrics",
               "metricQueryType": 0,
               "metricEditorMode": 1,
-              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"TCP_Client_Reset_Count\"', 'Sum', 60)",
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"SpilloverCount\" ', 'Sum', 300), MAX, DESC, 4)",
               "region": "default",
               "id": "",
-              "period": "60",
+              "period": "300",
+              "statistic": "Sum",
+              "label": "넘침"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "백엔드 연결 오류",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 20,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SORT(SEARCH('{AWS/ELB,LoadBalancerName} MetricName=\"BackendConnectionErrors\" ', 'Sum', 300), MAX, DESC, 4)",
+              "region": "default",
+              "id": "",
+              "period": "300",
               "statistic": "Sum"
             }
           ]
@@ -2585,7 +2662,7 @@ data:
         {
           "id": 1,
           "type": "stat",
-          "title": "최근 1시간 로그 이벤트",
+          "title": "로그 이벤트 (5분)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2629,23 +2706,20 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/Logs",
-              "metricName": "IncomingLogEvents",
-              "dimensions": {
-                "LogGroupName": "/aws/eks/my-cluster/cluster"
-              },
-              "statistic": "Sum",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/Logs,LogGroupName} MetricName=\"IncomingLogEvents\" LogGroupName=\"/aws/eks/my-cluster/cluster\"', 'Sum', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Sum"
             }
           ]
         },
         {
           "id": 2,
           "type": "stat",
-          "title": "최근 1시간 로그 용량",
+          "title": "로그 용량 (5분)",
           "datasource": {
             "type": "cloudwatch",
             "uid": "cloudwatch"
@@ -2689,16 +2763,13 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/Logs",
-              "metricName": "IncomingBytes",
-              "dimensions": {
-                "LogGroupName": "/aws/eks/my-cluster/cluster"
-              },
-              "statistic": "Sum",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/Logs,LogGroupName} MetricName=\"IncomingBytes\" LogGroupName=\"/aws/eks/my-cluster/cluster\"', 'Sum', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Sum"
             }
           ]
         },
@@ -2743,16 +2814,14 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/Logs",
-              "metricName": "IncomingLogEvents",
-              "dimensions": {
-                "LogGroupName": "/aws/eks/my-cluster/cluster"
-              },
-              "statistic": "Sum",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/Logs,LogGroupName} MetricName=\"IncomingLogEvents\" LogGroupName=\"/aws/eks/my-cluster/cluster\"', 'Sum', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Sum",
+              "label": "이벤트"
             }
           ]
         },
@@ -2797,16 +2866,14 @@ data:
                 "uid": "cloudwatch"
               },
               "queryMode": "Metrics",
-              "namespace": "AWS/Logs",
-              "metricName": "IncomingBytes",
-              "dimensions": {
-                "LogGroupName": "/aws/eks/my-cluster/cluster"
-              },
-              "statistic": "Sum",
-              "period": "300",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/Logs,LogGroupName} MetricName=\"IncomingBytes\" LogGroupName=\"/aws/eks/my-cluster/cluster\"', 'Sum', 300)",
               "region": "default",
-              "matchExact": true,
-              "id": ""
+              "id": "",
+              "period": "300",
+              "statistic": "Sum",
+              "label": "용량"
             }
           ]
         }
