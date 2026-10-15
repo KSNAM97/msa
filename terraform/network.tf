@@ -27,3 +27,15 @@ module "vpc" {
   public_subnet_tags  = { "kubernetes.io/role/elb" = 1 }
   private_subnet_tags = { "kubernetes.io/role/internal-elb" = 1 }
 }
+
+# S3 게이트웨이 엔드포인트 (무료): 노드/파드에서 S3 로 가는 트래픽(상품 이미지 업로드 등)이 NAT 게이트웨이와 인터넷을 거치지 않고
+# VPC 안의 전용 경로로 간다. -> NAT 데이터 처리 요금 절감 + 트래픽이 AWS 내부망에만 머무름.
+# private 서브넷의 라우트 테이블에 "S3 로 가는 길"이 추가되는 방식이라 앱 코드/설정 변경은 필요 없다.
+# (브라우저가 읽는 products/ 이미지의 공개 읽기 정책은 그대로: 사용자는 인터넷으로 S3 에 직접 접속한다)
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = module.vpc.private_route_table_ids
+  tags              = { Name = "${var.cluster_name}-s3" }
+}
