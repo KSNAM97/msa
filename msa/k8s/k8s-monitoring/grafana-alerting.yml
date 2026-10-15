@@ -56,12 +56,12 @@ data:
           - uid: nam97-svc-down
             title: Service down
             condition: C
-            for: 2m
+            for: 5m   # 배포(롤링 업데이트)로 파드가 교체되는 동안의 잠깐의 중단에는 알람이 가지 않도록 5분
             noDataState: OK
             execErrState: OK
             annotations:
               summary: 서비스 파드가 응답하지 않습니다
-              description: 'Prometheus 가 {{ $labels.pod }} 의 지표를 2분 넘게 수집하지 못했습니다 (파드 중지/재시작 중일 수 있음)'
+              description: 'Prometheus 가 {{ $labels.pod }} 의 지표를 5분 넘게 수집하지 못했습니다 (파드 중지/재시작 중일 수 있음)'
             labels: { severity: critical }
             data:
               - refId: A
