@@ -100,7 +100,8 @@ terraform init
 terraform apply
 ```
 
-- 필요 도구: Terraform ≥ 1.5, AWS CLI, kubectl, gh CLI(GitHub Actions 자동 실행용)
+- state 저장소: 최초 1회 `terraform/bootstrap`을 apply해 S3 버킷을 만든 뒤 메인(`terraform/`)을 init합니다. 버킷은 메인을 destroy해도 유지됩니다.
+- 필요 도구: Terraform ≥ 1.10, AWS CLI, kubectl, gh CLI(GitHub Actions 자동 실행용)
 - 비용 절감: RDS는 가장 작은 샌드박스 사양, 모든 리소스에 `Environment=sandbox` 태그
 - 삭제: `terraform destroy` (ArgoCD가 만든 리소스/로드밸런서까지 정리하도록 destroy 훅 포함)
 - HTTPS 인증서는 destroy 시 백업하고 다음 apply에서 복원해 Let's Encrypt 발급 한도를 피합니다.
@@ -158,7 +159,7 @@ EKS/RDS/VPC/NAT/로드밸런서/ECR/S3의 생성·삭제가 CloudTrail → Event
 - 탈퇴한 회원의 로그인 토큰은 만료 시각까지 유효합니다(JWT가 서버 상태를 저장하지 않는 방식). 블랙리스트나 토큰 짧은 만료 + 리프레시로 보완할 수 있습니다.
 - 주문 취소는 서비스 간 분산 트랜잭션이 아니어서 극단적인 장애 시 재고 불일치 가능성이 있습니다(사가/아웃박스 패턴으로 개선 가능).
 - Prometheus는 로그인 없이 공개되어 있습니다(Ingress Basic 인증 또는 IP 제한 필요)
-- Terraform state에 비밀 값(DB 비밀번호, JWT 키, S3 키)이 평문으로 들어가므로 로컬 state를 쓰는 지금은 git에서 제외(`.gitignore`)합니다. 팀 운영 시에는 암호화된 원격 backend(S3 + DynamoDB lock)로 옮겨야 합니다.
+- Terraform state에는 비밀 값(DB 비밀번호, JWT 키 등)이 들어 있어 S3 원격 backend(암호화, 버전 관리, 공개 차단, HTTPS 전용, 네이티브 잠금)에 저장합니다. 다만 단일 AWS 계정/단일 사용자 기준이며, 팀 운영 시에는 접근 권한(IAM) 분리와 KMS 키 암호화를 추가하는 것이 좋습니다.
 - 단일 NAT·단일 AZ RDS·자동 백업 off 등 비용 최소화(샌드박스) 설정
 
 ## 스크린샷
@@ -171,4 +172,4 @@ EKS/RDS/VPC/NAT/로드밸런서/ECR/S3의 생성·삭제가 CloudTrail → Event
 
 ## 라이선스
 
-개인 학습/포트폴리오 목적의 프로젝트입니다.
+[MIT License](LICENSE) 로 공개합니다. 개인 학습/포트폴리오 목적의 프로젝트이며, 자유롭게 참고하고 수정할 수 있습니다.
