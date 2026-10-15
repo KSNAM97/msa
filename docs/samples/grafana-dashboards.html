@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafana 대시보드 미리보기 - NAM97</title>
+<style>
+  /* Grafana 다크 테마를 흉내 낸 미리보기. 패널 구성은 실제 대시보드 정의(grafana-config.yml)와 같고, 그래프 값은 샘플입니다 */
+  :root { --bg:#111217; --panel:#181b1f; --line:#2c3235; --text:#d8d9da; --muted:#8e8e93; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,"Noto Sans KR",Arial,sans-serif; font-size:13px; }
+  .top { display:flex; align-items:center; gap:14px; padding:10px 18px; background:#0b0c0e; border-bottom:1px solid var(--line); }
+  .logo { color:#ff9830; font-weight:700; letter-spacing:.02em; }
+  .crumb { color:var(--muted); }
+  .tabs { display:flex; gap:2px; padding:0 14px; background:#0b0c0e; border-bottom:1px solid var(--line); overflow-x:auto; }
+  .tabs button { background:none; border:0; color:var(--muted); padding:11px 14px; cursor:pointer; font:inherit; border-bottom:2px solid transparent; white-space:nowrap; }
+  .tabs button.on { color:#fff; border-bottom-color:#ff9830; }
+  .bar { display:flex; gap:10px; align-items:center; padding:10px 18px; color:var(--muted); font-size:12px; }
+  .chip { border:1px solid var(--line); background:#202226; padding:4px 10px; border-radius:2px; color:var(--text); }
+  .src { margin-left:auto; display:flex; gap:8px; align-items:center; }
+  .badge { padding:2px 8px; border-radius:10px; font-size:11px; }
+  .b-prom { background:#e6522c33; color:#ff7a58; } .b-cw { background:#ff990033; color:#ffb454; }
+  .grid { display:grid; grid-template-columns:repeat(24,1fr); gap:8px; padding:0 18px 24px; }
+  .p { background:var(--panel); border:1px solid var(--line); border-radius:2px; padding:8px 10px; display:flex; flex-direction:column; min-height:90px; }
+  .p h4 { margin:0 0 6px; font-weight:500; font-size:12px; color:#ccccdc; }
+  .stat { align-items:center; justify-content:center; text-align:center; }
+  .stat .v { font-size:30px; font-weight:500; }
+  .stat .l { font-size:11px; color:rgba(0,0,0,.6); margin-top:2px; }
+  .legend { display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:4px; font-size:11px; color:var(--muted); }
+  .legend i { display:inline-block; width:10px; height:3px; margin-right:5px; vertical-align:middle; }
+  svg { width:100%; flex:1; min-height:110px; }
+  .axis { stroke:#2c3235; stroke-width:1; } .lbl { fill:#6e7075; font-size:9px; }
+  @media (max-width: 800px) { .grid > .p { grid-column: span 24 !important; } }
+</style>
+</head>
+<body>
+<div class="top"><span class="logo">Grafana</span><span class="crumb">Dashboards › NAM97 › <b id="crumb"></b></span></div>
+<div class="tabs" id="tabs"></div>
+<div class="bar"><span class="chip">Last 1 hour</span><span class="chip">Refresh 30s</span>
+  <span class="src"><span class="badge b-prom">Prometheus</span><span class="badge b-cw">CloudWatch</span></span></div>
+<div class="grid" id="grid"></div>
+
+<script>
+  // 색 팔레트(Grafana 기본 "classic palette")
+  const C = ['#73bf69', '#f2cc0c', '#8ab8ff', '#ff9830', '#f2495c', '#b877d9'];
+  // 시계열 샘플 생성: 사인파 + 잡음 (패널마다 시드를 달리해 모양이 다르게)
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  function series(base, amp, n = 60, trend = 0) {
+    const ph = rnd() * 6; return Array.from({ length: n }, (_, i) => Math.max(0, base + trend * i / n + amp * Math.sin(i / 7 + ph) + amp * 0.35 * (rnd() - 0.5)));
+  }
+  const fmt = (v, u) => u === 'percent' ? v.toFixed(1) + '%' : u === 'bytes' ? (v >= 1e9 ? (v / 1e9).toFixed(1) + ' GB' : (v / 1e6).toFixed(0) + ' MB') : u === 's' ? (v * 1000).toFixed(0) + ' ms' : u === 'reqps' ? v.toFixed(2) + ' req/s' : u === 'Bps' ? (v / 1e3).toFixed(0) + ' kB/s' : v >= 100 ? v.toFixed(0) : v.toFixed(2);
+
+  // 선 그래프(SVG): 영역 채우기 + 격자 + 최소/최대 라벨
+  function chart(lines, unit) {
+    const W = 600, H = 180, all = lines.flatMap(l => l.d), max = Math.max(...all) * 1.15 || 1;
+    const x = (i, n) => 36 + i * (W - 44) / (n - 1), y = v => H - 18 - v / max * (H - 32);
+    let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+    for (let g = 0; g <= 4; g++) { const gy = 14 + g * (H - 32) / 4; s += `<line class="axis" x1="36" x2="${W - 8}" y1="${gy}" y2="${gy}"/><text class="lbl" x="2" y="${gy + 3}">${fmt(max * (1 - g / 4), unit)}</text>`; }
+    lines.forEach((l, k) => {
+      const pts = l.d.map((v, i) => `${x(i, l.d.length).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+      s += `<polygon fill="${C[k % 6]}" opacity=".12" points="36,${H - 18} ${pts} ${W - 8},${H - 18}"/><polyline fill="none" stroke="${C[k % 6]}" stroke-width="1.6" points="${pts}"/>`;
+    });
+    return s + '</svg>';
+  }
+  const legend = names => `<div class="legend">${names.map((n, k) => `<span><i style="background:${C[k % 6]}"></i>${n}</span>`).join('')}</div>`;
+  // 패널 정의 -> HTML. w: 24칸 중 차지하는 칸 수
+  const ts = (title, names, unit, base, amp, w = 12) => ({ w, html: `<h4>${title}</h4>${chart(names.map(() => ({ d: series(base, amp) })), unit)}${legend(names)}` });
+  const st = (title, val, unit, color, w = 4, label = '') => ({ w, cls: 'stat', style: `background:${color}`, html: `<h4 style="color:rgba(0,0,0,.7)">${title}</h4><div class="v" style="color:#0b0c0e">${val}</div><div class="l">${label}</div>` });
+  const G = '#73bf69', Y = '#f2cc0c', B = '#5794f2', R = '#f2495c', O = '#ff9830';
+  const pods = ['apigateway-…6xm2s', 'member-…2hrsn', 'product-…7mk7q', 'ordering-…vw6kw'];
+  const nodes = ['10.0.10.75', '10.0.11.125', '10.0.10.192'];
+
+  const DASH = {
+    'NAM97 MALL 개요': [
+      st('apigateway', 'UP', '', G, 6), st('member', 'UP', '', G, 6), st('product', 'UP', '', G, 6), st('ordering', 'UP', '', G, 6),
+      ts('요청 수 (req/s)', ['apigateway', 'member', 'product', 'ordering'], 'reqps', 1.4, 1), ts('5xx 에러 (req/s)', ['apigateway', 'member', 'product', 'ordering'], 'reqps', 0.02, 0.02),
+      ts('평균 응답시간', ['apigateway', 'member', 'product', 'ordering'], 's', 0.08, 0.05), ts('JVM 힙 메모리', ['apigateway', 'member', 'product', 'ordering'], 'bytes', 160e6, 40e6)],
+    'Kubernetes 클러스터': [
+      st('노드', '3', '', G), st('실행 파드 (soldesk)', '5', '', B), st('수집 대상 UP', '15', '', G), st('수집 대상 DOWN', '0', '', G), st('클러스터 CPU', '22.8%', '', G), st('클러스터 메모리', '45.1%', '', G),
+      ts('노드 CPU 사용률', nodes, 'percent', 24, 10), ts('노드 메모리 사용률', nodes, 'percent', 46, 8),
+      ts('노드 네트워크 (수신/송신)', ['수신', '송신'], 'Bps', 60e3, 30e3), ts('노드 디스크 사용률', nodes, 'percent', 31, 1),
+      ts('파드 CPU (코어)', pods, '', 0.03, 0.02), ts('파드 메모리', pods, 'bytes', 260e6, 25e6)],
+    'Amazon RDS (CloudWatch)': [
+      st('CPU 사용률', '6.3%', '', G, 6), st('연결 수', '9', '', B, 6), st('여유 스토리지', '18.6 GB', '', G, 6), st('여유 메모리', '312 MB', '', Y, 6),
+      ts('CPU 사용률', ['CPUUtilization'], 'percent', 6, 3), ts('연결 수', ['DatabaseConnections'], '', 9, 3),
+      ts('읽기/쓰기 IOPS', ['읽기', '쓰기'], '', 4, 3), ts('읽기/쓰기 지연 (초)', ['읽기', '쓰기'], 's', 0.002, 0.001),
+      ts('네트워크 (수신/송신)', ['수신', '송신'], 'Bps', 12e3, 6e3), ts('여유 스토리지', ['FreeStorageSpace'], 'bytes', 18.6e9, 0.05e9)],
+    'Amazon EC2 노드 (CloudWatch)': [
+      ts('CPU 사용률 (인스턴스별)', ['i-0b232983…', 'i-0b601e99…', 'i-099a753e…'], 'percent', 22, 9, 24),
+      ts('네트워크 수신 (바이트)', ['i-0b232983…', 'i-0b601e99…', 'i-099a753e…'], 'bytes', 40e6, 20e6), ts('네트워크 송신 (바이트)', ['i-0b232983…', 'i-0b601e99…', 'i-099a753e…'], 'bytes', 30e6, 15e6),
+      ts('디스크 읽기 (바이트)', ['i-0b232983…', 'i-0b601e99…', 'i-099a753e…'], 'bytes', 5e6, 4e6), ts('디스크 쓰기 (바이트)', ['i-0b232983…', 'i-0b601e99…', 'i-099a753e…'], 'bytes', 12e6, 6e6)],
+    'NLB 타깃 그룹 (CloudWatch)': [
+      st('정상 타깃', '3', '', G, 6), st('비정상 타깃', '0', '', G, 6), st('활성 연결', '24', '', B, 6), st('신규 연결 (분당)', '118', '', B, 6),
+      ts('정상 / 비정상 타깃 수', ['HealthyHostCount', 'UnHealthyHostCount'], '', 3, 0.01), ts('활성 연결 수', ['ActiveFlowCount'], '', 24, 8),
+      ts('처리 바이트', ['ProcessedBytes'], 'bytes', 4e6, 2e6), ts('연결 리셋 (타깃/클라이언트)', ['TCP_Target_Reset', 'TCP_Client_Reset'], '', 1, 1)],
+    'Amazon CloudWatch Logs (EKS)': [
+      st('최근 1시간 로그 이벤트', '14,820', '', B, 12), st('최근 1시간 로그 용량', '9.2 MB', '', B, 12),
+      ts('로그 이벤트 수 (5분)', ['IncomingLogEvents'], '', 1200, 500), ts('로그 용량 (5분)', ['IncomingBytes'], 'bytes', 800e3, 300e3)],
+  };
+
+  const tabs = document.getElementById('tabs'), grid = document.getElementById('grid');
+  function show(name) {
+    document.getElementById('crumb').textContent = name;
+    [...tabs.children].forEach(b => b.classList.toggle('on', b.textContent === name));
+    seed = 7;
+    grid.innerHTML = DASH[name].map(p => `<div class="p ${p.cls || ''}" style="grid-column:span ${p.w};${p.style || ''}">${p.html}</div>`).join('');
+  }
+  Object.keys(DASH).forEach(n => { const b = document.createElement('button'); b.textContent = n; b.onclick = () => show(n); tabs.appendChild(b); });
+  show('Kubernetes 클러스터');
+</script>
+</body>
+</html>

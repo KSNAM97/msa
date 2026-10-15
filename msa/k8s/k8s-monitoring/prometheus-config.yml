@@ -60,3 +60,18 @@ data:
             regex: '(.+)'
             target_label: __metrics_path__
             replacement: '/api/v1/nodes/${1}/proxy/metrics/cadvisor'
+
+      # 4) ArgoCD: 애플리케이션 컨트롤러(8082 포트)가 앱별 동기화/상태(argocd_app_info)를 내보낸다.
+      #    관리자 페이지의 "배포(ArgoCD)" 현황이 이 값을 사용한다
+      - job_name: 'argocd'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: ['argocd']
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+            action: keep
+            regex: 'argocd-application-controller'
+          - source_labels: [__meta_kubernetes_pod_ip]
+            target_label: __address__
+            replacement: '${1}:8082'

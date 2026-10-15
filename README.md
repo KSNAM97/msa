@@ -10,7 +10,8 @@ AWS EKS 위에서 운영되는 **마이크로서비스(MSA) 쇼핑몰**입니다
 | 문서 | 내용 |
 |---|---|
 | [구성과 주요 스택](docs/ARCHITECTURE.md) | 전체 구성도, 서비스/API, 기술 스택, Terraform 구성, 배포 흐름, 보안 설계 |
-| [디자인 가이드](docs/DESIGN.md) | 디자인 원칙, 스타일 토큰, 레이아웃, 페이지 구성, 사용자 흐름, 입력 규칙 |
+| [디자인 가이드](docs/DESIGN.md) | 디자인 원칙, 스타일 토큰, 레이아웃, 페이지 구성, 사용자 흐름, 입력 규칙, 관리자/Grafana 화면 |
+| 샘플 화면 | [쇼핑몰](docs/samples/storefront.html) · [관리자](docs/samples/admin-console.html) · [Grafana 대시보드](docs/samples/grafana-dashboards.html) — 내려받아 브라우저로 열면 서버 없이 화면을 볼 수 있습니다 |
 
 ## 한눈에 보기
 

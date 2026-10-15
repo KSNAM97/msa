@@ -90,13 +90,54 @@ flowchart LR
 | 비밀번호 | 8~64자, 영문과 숫자를 모두 포함, 공백 불가 |
 | 이름 / 닉네임 | 1~30자 |
 
-## 8. 모니터링 화면
+## 8. 관리자 페이지와 모니터링 화면
 
-- **Grafana** `NAM97 MALL 개요` (로그인하면 첫 화면): 서비스 UP/DOWN, 요청 수, 5xx 에러, 응답시간, JVM 힙, 파드 CPU/메모리, 노드 CPU/메모리
-- **CloudWatch** `nam97-sandbox`: RDS CPU/연결/스토리지, 노드 CPU
-- **관리자 페이지 서비스 상태**: 각 서비스의 `/health`를 30초마다 확인
+**관리자 페이지** (`admin.html`) 는 영역별 탭 + 요약 화면으로 구성한다. 요약의 카드를 누르면 해당 탭으로 이동한다.
 
-## 9. 스크린샷
+| 탭 | 내용 | 데이터 출처 |
+|---|---|---|
+| 요약 | 서비스·배포·CI/CD·쿠버네티스·DB·주문/매출·회원/상품 카드 7장, 최근 주문, 재고 부족 상품 | 아래 탭들의 데이터를 한 화면에 모음 |
+| 서비스 | 서비스별 정상/응답 없음, 초당 요청·5xx 에러 | 각 서비스 `/health`, Prometheus |
+| 배포 | ArgoCD 앱별 Sync/Health, GitHub Actions 최근 실행 | Prometheus(`argocd_app_info`), GitHub API |
+| 쿠버네티스 (EKS) | 노드/파드 CPU·메모리 | Prometheus (node-exporter, cAdvisor) |
+| 모니터링 | Grafana, Prometheus, CloudWatch 바로가기 | - |
+| 데이터베이스 | 테이블 보기, SQL 조회(읽기 전용), Adminer 바로가기 | RDS (서버가 읽기 전용으로 조회) |
+| 쇼핑몰 | 주문 관리(취소), 회원 관리(회원별 상세), 상품 | 각 서비스 API |
+
+**Grafana** 는 시작할 때 데이터소스(Prometheus, CloudWatch)와 대시보드 6종이 자동 등록된다. 로그인하면 `NAM97 MALL 개요`가 첫 화면이다.
+
+| 대시보드 | 내용 | 데이터소스 |
+|---|---|---|
+| NAM97 MALL 개요 | 서비스 UP/DOWN, 요청, 5xx 에러, 응답시간, JVM 힙 | Prometheus |
+| Kubernetes 클러스터 | 노드/파드 CPU·메모리·네트워크·디스크, 수집 대상 상태 | Prometheus |
+| Amazon RDS | CPU, 연결, 여유 스토리지/메모리, IOPS, 지연, 네트워크 | CloudWatch |
+| Amazon EC2 노드 | 워커 노드 CPU, 네트워크, 디스크 | CloudWatch |
+| NLB 타깃 그룹 | 정상/비정상 타깃, 활성/신규 연결, 처리 바이트, 리셋 | CloudWatch |
+| CloudWatch Logs | EKS 컨트롤 플레인 로그 유입량 | CloudWatch |
+
+CloudWatch는 Grafana 파드의 서비스어카운트에 연결한 **읽기 전용 IAM 역할(IRSA)** 로 읽는다. 키를 저장하지 않는다.
+그 밖에 CloudWatch 대시보드 `nam97-sandbox`와 알람 3종(RDS CPU/스토리지, 노드 CPU)이 있다.
+
+## 9. 샘플 화면
+
+실제 화면 코드를 그대로 쓰고 샘플 데이터로 동작하게 만든 HTML 파일이다. **서버 없이** 파일을 브라우저로 열면 된다 (저장소를 내려받은 뒤 더블클릭).
+
+| 샘플 | 파일 | 보는 법 |
+|---|---|---|
+| 쇼핑몰 메인 (대표 페이지) | [`samples/storefront.html`](samples/storefront.html) | 카테고리 메뉴, 정렬, 카드 호버(`ADD TO CART`), 품절/잔여 뱃지 |
+| 상품 상세 | [`samples/product-detail.html`](samples/product-detail.html) | 큰 이미지, 수량 선택, 장바구니 / 바로 구매 |
+| 장바구니 | [`samples/cart.html`](samples/cart.html) | 수량 조절, 삭제, 총 결제금액, 주문하기 (로그인 상태 샘플) |
+| 주문내역 | [`samples/orders.html`](samples/orders.html) | 주문완료/취소 상태, 주문 취소 버튼 |
+| 내 정보 | [`samples/mypage.html`](samples/mypage.html) | 정보 수정, 비밀번호 변경(확인란 포함) |
+| 회원가입 / 로그인 | [`samples/signup.html`](samples/signup.html) · [`samples/login.html`](samples/login.html) | 이메일·비밀번호 규칙 안내, 비밀번호 확인란 |
+| 관리자 페이지 | [`samples/admin-console.html`](samples/admin-console.html) | 위쪽 탭을 눌러 요약/서비스/배포/쿠버네티스/DB/쇼핑몰 확인 |
+| Grafana 대시보드 | [`samples/grafana-dashboards.html`](samples/grafana-dashboards.html) | 위쪽 탭으로 대시보드 6종 전환 (그래프 값은 샘플) |
+
+- 쇼핑몰/관리자 샘플은 `msa/frontend/src`의 실제 코드를 합쳐 만든 것이라, 화면을 고치면 샘플도 다시 만들어야 한다(스크립트: 같은 코드 + 샘플 데이터 응답 한 줄 추가).
+- Grafana 샘플은 실제 대시보드 정의(`msa/k8s/k8s-monitoring/grafana-config.yml`)와 같은 패널 구성을 그린 모형이다. 배포 후 실제 Grafana에서는 실시간 값이 표시된다.
+- GitHub 저장소 화면에서는 HTML이 소스로 보이므로, 내려받아 열거나 GitHub Pages로 공개하면 화면 그대로 볼 수 있다.
+
+## 10. 스크린샷
 
 > 배포 후 화면을 캡처해 `docs/images/`에 넣고 아래 주석을 해제해 연결한다.
 

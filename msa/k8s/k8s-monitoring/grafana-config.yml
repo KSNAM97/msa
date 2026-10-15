@@ -1,8 +1,16 @@
 # Grafana 자동 설정 (프로비저닝): 컨테이너가 시작될 때 아래 내용이 자동으로 등록된다 -> 수동 설정 없이 바로 그래프가 보인다
-#   1) grafana-datasources : Prometheus 를 데이터소스로 등록 (같은 monitoring 네임스페이스의 prometheus-service:9090)
-#   2) grafana-dashboard-provider : 대시보드 파일을 읽을 위치를 알려준다
-#   3) grafana-dashboards : 대시보드 정의(JSON) "NAM97 MALL 개요" - 서비스 상태/요청/에러/응답시간/JVM/파드/노드
-# 대시보드는 읽기 전용(코드로 관리)이다. 수정하려면 이 파일을 고치고 push 한다 (ArgoCD 가 반영).
+#   1) grafana-datasources : Prometheus(클러스터 안) + CloudWatch(AWS) 를 데이터소스로 등록
+#        - CloudWatch 는 Grafana 파드의 서비스어카운트(IRSA, 테라폼이 생성)에 연결된 "읽기 전용" 권한으로 접근한다. 키를 저장하지 않는다
+#   2) grafana-dashboard-provider : 대시보드 파일을 읽을 위치를 알려준다 (폴더: NAM97)
+#   3) grafana-dashboards : 대시보드 6종
+#        - NAM97 MALL 개요 : 서비스 상태/요청/에러/응답시간/JVM            (Prometheus)
+#        - Kubernetes 클러스터 : 노드/파드 CPU, 메모리, 네트워크, 디스크   (Prometheus)
+#        - Amazon RDS : DB CPU/연결/스토리지/IOPS/지연                      (CloudWatch)
+#        - Amazon EC2 노드 : 워커 노드 CPU/네트워크/디스크                  (CloudWatch)
+#        - NLB 타깃 그룹 : 로드밸런서 타깃 정상/비정상, 연결 수, 트래픽     (CloudWatch)
+#        - CloudWatch Logs : EKS 컨트롤 플레인 로그 유입량                  (CloudWatch)
+# 대시보드는 읽기 전용(코드로 관리)이다. 수정하려면 이 파일(또는 생성 스크립트)을 고치고 push 한다 (ArgoCD 가 반영).
+# RDS 대시보드의 DB 식별자(my-cluster-mysql)는 terraform 의 "${var.cluster_name}-mysql" 과 같아야 한다.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -19,6 +27,14 @@ data:
         url: http://prometheus-service:9090
         isDefault: true
         editable: false
+      - name: CloudWatch
+        uid: cloudwatch
+        type: cloudwatch
+        access: proxy
+        editable: false
+        jsonData:
+          authType: default
+          defaultRegion: ap-northeast-2
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -183,7 +199,7 @@ data:
         {
           "id": 3,
           "type": "stat",
-          "title": "실행 중인 파드",
+          "title": "서비스 파드",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -226,8 +242,8 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "count(kube_pod_info) or count(up{job=\"spring-services\"})",
-              "legendFormat": "서비스 파드"
+              "expr": "count(up{job=\"spring-services\"} == 1)",
+              "legendFormat": "UP"
             }
           ]
         },
@@ -410,9 +426,543 @@ data:
               "legendFormat": "{{app}}"
             }
           ]
+        }
+      ]
+    }
+  nam97-k8s.json: |
+    {
+      "uid": "nam97-k8s",
+      "title": "Kubernetes 클러스터",
+      "tags": [
+        "nam97",
+        "kubernetes"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "노드",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(up{job=\"node-exporter\"} == 1)",
+              "legendFormat": "Ready"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "실행 파드 (soldesk)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 4,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(count by (pod) (container_memory_working_set_bytes{namespace=\"soldesk\",container!=\"\",container!=\"POD\"}))",
+              "legendFormat": "pods"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "수집 대상 UP",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(up == 1)",
+              "legendFormat": "UP"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "수집 대상 DOWN",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(up == 0) or vector(0)",
+              "legendFormat": "DOWN"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "클러스터 CPU 사용률",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 85
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)",
+              "legendFormat": "CPU"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "클러스터 메모리 사용률",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 20,
+            "y": 0,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 85
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "(1 - sum(node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes)) * 100",
+              "legendFormat": "메모리"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "노드 CPU 사용률",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)",
+              "legendFormat": "{{instance}}"
+            }
+          ]
         },
         {
           "id": 8,
+          "type": "timeseries",
+          "title": "노드 메모리 사용률",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "노드 네트워크 (수신/송신)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (instance) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*|cali.*|eni.*\"}[2m]))",
+              "legendFormat": "수신 {{instance}}"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|cali.*|eni.*\"}[2m]))",
+              "legendFormat": "송신 {{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "노드 디스크 사용률",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "(1 - node_filesystem_avail_bytes{mountpoint=\"/\",fstype!=\"rootfs\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"rootfs\"}) * 100",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 11,
           "type": "timeseries",
           "title": "파드 CPU (코어)",
           "datasource": {
@@ -457,7 +1007,7 @@ data:
           ]
         },
         {
-          "id": 9,
+          "id": 12,
           "type": "timeseries",
           "title": "파드 메모리",
           "datasource": {
@@ -502,9 +1052,9 @@ data:
           ]
         },
         {
-          "id": 10,
+          "id": 13,
           "type": "timeseries",
-          "title": "노드 CPU 사용률",
+          "title": "파드 네트워크 (수신)",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -517,7 +1067,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "percent",
+              "unit": "Bps",
               "custom": {
                 "lineWidth": 2,
                 "fillOpacity": 10
@@ -541,15 +1091,15 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)",
-              "legendFormat": "{{instance}}"
+              "expr": "sum by (pod) (rate(container_network_receive_bytes_total{namespace=\"soldesk\"}[2m]))",
+              "legendFormat": "{{pod}}"
             }
           ]
         },
         {
-          "id": 11,
+          "id": 14,
           "type": "timeseries",
-          "title": "노드 메모리 사용률",
+          "title": "파드 네트워크 (송신)",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -557,6 +1107,327 @@ data:
           "gridPos": {
             "x": 12,
             "y": 28,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (pod) (rate(container_network_transmit_bytes_total{namespace=\"soldesk\"}[2m]))",
+              "legendFormat": "{{pod}}"
+            }
+          ]
+        }
+      ]
+    }
+  nam97-rds.json: |
+    {
+      "uid": "nam97-rds",
+      "title": "Amazon RDS (CloudWatch)",
+      "tags": [
+        "nam97",
+        "cloudwatch",
+        "rds"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "CPU 사용률",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 85
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "연결 수",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 6,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "DatabaseConnections",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "여유 스토리지",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 2147483648
+                  },
+                  {
+                    "color": "green",
+                    "value": 5368709120
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "FreeStorageSpace",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "여유 메모리",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 18,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "FreeableMemory",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "CPU 사용률",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 4,
             "w": 12,
             "h": 8
           },
@@ -583,11 +1454,1359 @@ data:
             {
               "refId": "A",
               "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
               },
-              "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100",
-              "legendFormat": "{{instance}}"
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "연결 수",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "DatabaseConnections",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "읽기/쓰기 IOPS",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "ReadIOPS",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": "",
+              "label": "읽기"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "WriteIOPS",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": "",
+              "label": "쓰기"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "읽기/쓰기 지연 (초)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "ReadLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": "",
+              "label": "읽기"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "WriteLatency",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": "",
+              "label": "쓰기"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "네트워크 (수신/송신)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 20,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "NetworkReceiveThroughput",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": "",
+              "label": "수신"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "NetworkTransmitThroughput",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": "",
+              "label": "송신"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "여유 스토리지",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 20,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/RDS",
+              "metricName": "FreeStorageSpace",
+              "dimensions": {
+                "DBInstanceIdentifier": "my-cluster-mysql"
+              },
+              "statistic": "Average",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        }
+      ]
+    }
+  nam97-ec2.json: |
+    {
+      "uid": "nam97-ec2",
+      "title": "Amazon EC2 노드 (CloudWatch)",
+      "tags": [
+        "nam97",
+        "cloudwatch",
+        "ec2"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "CPU 사용률 (인스턴스별)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"CPUUtilization\"', 'Average', 300)",
+              "region": "default",
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "네트워크 수신 (바이트)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"NetworkIn\"', 'Average', 300)",
+              "region": "default",
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "네트워크 송신 (바이트)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"NetworkOut\"', 'Average', 300)",
+              "region": "default",
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "디스크 읽기 (바이트)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"DiskReadBytes\"', 'Average', 300)",
+              "region": "default",
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "디스크 쓰기 (바이트)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"DiskWriteBytes\"', 'Average', 300)",
+              "region": "default",
+              "id": "",
+              "period": "300",
+              "statistic": "Average"
+            }
+          ]
+        }
+      ]
+    }
+  nam97-nlb.json: |
+    {
+      "uid": "nam97-nlb",
+      "title": "NLB 타깃 그룹 (CloudWatch)",
+      "tags": [
+        "nam97",
+        "cloudwatch",
+        "nlb"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "정상 타깃",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"HealthyHostCount\"', 'Minimum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Minimum"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "비정상 타깃",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 6,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"UnHealthyHostCount\"', 'Maximum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Maximum"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "활성 연결",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"ActiveFlowCount\"', 'Average', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Average"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "신규 연결 (분당)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 18,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"NewFlowCount\"', 'Sum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Sum"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "정상 / 비정상 타깃 수",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"HealthyHostCount\"', 'Minimum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Minimum"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"UnHealthyHostCount\"', 'Maximum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Maximum"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "활성 연결 수",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"ActiveFlowCount\"', 'Average', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Average"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "처리 바이트",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"ProcessedBytes\"', 'Sum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Sum"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "연결 리셋 (타깃/클라이언트)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"TCP_Target_Reset_Count\"', 'Sum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Sum"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 1,
+              "expression": "SEARCH('{AWS/NetworkELB,LoadBalancer,TargetGroup} MetricName=\"TCP_Client_Reset_Count\"', 'Sum', 60)",
+              "region": "default",
+              "id": "",
+              "period": "60",
+              "statistic": "Sum"
+            }
+          ]
+        }
+      ]
+    }
+  nam97-logs.json: |
+    {
+      "uid": "nam97-logs",
+      "title": "Amazon CloudWatch Logs (EKS)",
+      "tags": [
+        "nam97",
+        "cloudwatch",
+        "logs"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "최근 1시간 로그 이벤트",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/Logs",
+              "metricName": "IncomingLogEvents",
+              "dimensions": {
+                "LogGroupName": "/aws/eks/my-cluster/cluster"
+              },
+              "statistic": "Sum",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "최근 1시간 로그 용량",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/Logs",
+              "metricName": "IncomingBytes",
+              "dimensions": {
+                "LogGroupName": "/aws/eks/my-cluster/cluster"
+              },
+              "statistic": "Sum",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "로그 이벤트 수 (5분)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/Logs",
+              "metricName": "IncomingLogEvents",
+              "dimensions": {
+                "LogGroupName": "/aws/eks/my-cluster/cluster"
+              },
+              "statistic": "Sum",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "로그 용량 (5분)",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "namespace": "AWS/Logs",
+              "metricName": "IncomingBytes",
+              "dimensions": {
+                "LogGroupName": "/aws/eks/my-cluster/cluster"
+              },
+              "statistic": "Sum",
+              "period": "300",
+              "region": "default",
+              "matchExact": true,
+              "id": ""
             }
           ]
         }

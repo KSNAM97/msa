@@ -84,3 +84,22 @@ module "autoscaler_irsa" {
     }
   }
 }
+
+# Grafana 가 CloudWatch(RDS/EC2/NLB/Logs 지표)를 읽기 위한 IAM 역할 (IRSA).
+# 키를 저장하지 않고 monitoring:grafana 서비스어카운트로만 역할을 맡을 수 있게 제한하며, 권한은 "읽기 전용"만 준다.
+module "grafana_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name = "${var.cluster_name}-grafana-cloudwatch"
+  role_policy_arns = {
+    cloudwatch_read = "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess" # 지표/로그 조회만 가능, 생성/삭제/수정 불가
+  }
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["monitoring:grafana"]
+    }
+  }
+}

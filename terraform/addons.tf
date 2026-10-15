@@ -107,5 +107,18 @@ resource "helm_release" "argocd_root" {
     }
   })]
   # 순서 보장: ArgoCD/ingress/cert-manager 설치 완료 + 앱이 참조할 시크릿(DB/S3) + 복원된 인증서가 먼저 준비돼야 한다
-  depends_on = [helm_release.argocd, helm_release.cert_manager, helm_release.ingress_nginx, kubernetes_secret.app, kubernetes_secret.aws, kubernetes_secret.jwt, kubernetes_secret.admin, kubernetes_secret.grafana, kubernetes_secret.adminer_auth, kubernetes_secret.adminer_config, terraform_data.restore_certs]
+  depends_on = [helm_release.argocd, helm_release.cert_manager, helm_release.ingress_nginx, kubernetes_secret.app, kubernetes_secret.aws, kubernetes_secret.jwt, kubernetes_secret.admin, kubernetes_secret.grafana, kubernetes_secret.adminer_auth, kubernetes_secret.adminer_config, kubernetes_service_account.grafana, terraform_data.restore_certs]
+}
+
+# Grafana 서비스어카운트: 위 IAM 역할(grafana_irsa)을 연결해서 Grafana 파드가 CloudWatch 를 읽을 수 있게 한다.
+# 계정 ID 가 들어가는 역할 ARN 을 repo 매니페스트에 적지 않으려고 테라폼이 서비스어카운트를 직접 만든다.
+# (repo 의 grafana-depl_svc.yml 은 serviceAccountName: grafana 로 이 계정을 사용)
+resource "kubernetes_service_account" "grafana" {
+  metadata {
+    name      = "grafana"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    annotations = {
+      "eks.amazonaws.com/role-arn" = module.grafana_irsa.iam_role_arn
+    }
+  }
 }
