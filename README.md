@@ -9,6 +9,9 @@ AWS EKS 위에서 운영되는 **마이크로서비스(MSA) 쇼핑몰**입니다
 
 | 문서 | 내용 |
 |---|---|
+| [실행 방법](docs/RUNBOOK.md) | 만들기 · 확인 · 배포 · 삭제 순서, 문제 해결 (처음 보는 분은 여기부터) |
+| [구조와 폴더 경로](docs/STRUCTURE.md) | 어디에 무엇이 있는지 (폴더 트리, 서비스별 소스, 주소 구성) |
+| [함수/API 참고](docs/REFERENCE.md) | API 목록과 권한, 서비스 메서드, 프론트 함수, 테라폼 변수, 스크립트 |
 | [구성과 주요 스택](docs/ARCHITECTURE.md) | 전체 구성도, 서비스/API, 기술 스택, Terraform 구성, 배포 흐름, 보안 설계 |
 | [디자인 가이드](docs/DESIGN.md) | 디자인 원칙, 스타일 토큰, 레이아웃, 페이지 구성, 사용자 흐름, 입력 규칙, 관리자/Grafana 화면 |
 | 샘플 화면 | [쇼핑몰](docs/samples/storefront.html) · [관리자](docs/samples/admin-console.html) · [Grafana 대시보드](docs/samples/grafana-dashboards.html) — 내려받아 브라우저로 열면 서버 없이 화면을 볼 수 있습니다 |

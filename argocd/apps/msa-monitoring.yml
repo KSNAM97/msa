@@ -12,9 +12,17 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
+  # Certificate 는 repo 매니페스트와 ingress 의 cert-manager 주석(ingress-shim)이 같은 이름으로 만든다.
+  # ingress-shim 이 spec 을 다시 쓰므로 spec 차이는 무시한다 (인증서 자체는 정상). 이 설정이 없으면 항상 OutOfSync 로 보인다
+  ignoreDifferences:
+    - group: cert-manager.io
+      kind: Certificate
+      jsonPointers:
+        - /spec
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
