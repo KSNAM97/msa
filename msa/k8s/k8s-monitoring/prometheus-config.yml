@@ -25,14 +25,14 @@ data:
             replacement: '${1}:9100'
             target_label: __address__
 
-      # 2) 서비스 지표: soldesk 네임스페이스에서 prometheus.io/scrape: "true" 주석이 있는 파드만 수집한다
+      # 2) 서비스 지표: ksnam97 네임스페이스에서 prometheus.io/scrape: "true" 주석이 있는 파드만 수집한다
       #    (각 서비스 depl_svc.yml 에 이미 있음. 프론트엔드는 주석이 없어 제외됨)
       - job_name: 'spring-services'
         metrics_path: /actuator/prometheus
         kubernetes_sd_configs:
           - role: pod
             namespaces:
-              names: ['soldesk']
+              names: ['ksnam97']
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep

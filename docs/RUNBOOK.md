@@ -108,7 +108,7 @@ terraform destroy        # 약 15~20분. 비용이 드는 리소스를 모두 �
 |---|---|
 | 사이트 503, 파드 `ImagePullBackOff` | 이미지 빌드 중. Actions 탭에서 성공할 때까지 대기 |
 | 사이트 504 / 일부만 느림 | 노드 보안그룹 규칙 확인 (`eks.tf` 의 `node_security_group_additional_rules`) |
-| 인증서 `False` | Let's Encrypt 발급 한도(같은 이름 7일 5회). `kubectl describe certificate -n soldesk server-ksnam97-com-tls` 의 메시지에 재시도 시각 표시. destroy 시 백업/복원으로 예방 |
+| 인증서 `False` | Let's Encrypt 발급 한도(같은 이름 7일 5회). `kubectl describe certificate -n ksnam97 server-ksnam97-com-tls` 의 메시지에 재시도 시각 표시. destroy 시 백업/복원으로 예방 |
 | `terraform` 이 state 오류 | `terraform init` 다시. 다른 곳에서 apply 중이면 잠금 때문에 대기 |
 | 관리자 콘솔 지표가 "가져오지 못했습니다" | Prometheus 파드 상태 확인(`kubectl -n monitoring get pods`) |
 | Grafana CloudWatch 대시보드가 비어 있음 | CloudWatch 지표 수집에 몇 분 소요, 그래도 비면 Grafana 파드의 IRSA 확인 |

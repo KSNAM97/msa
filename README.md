@@ -152,7 +152,7 @@ EKS/RDS/VPC/NAT/로드밸런서/ECR/S3의 생성·삭제가 CloudTrail → Event
 ## 설계 포인트
 
 - **GitOps**: 클러스터 상태의 기준은 Git. 수동 `kubectl apply` 없이 ArgoCD가 반영
-- **최소 권한**: CI용 IAM 사용자는 EKS `soldesk` 네임스페이스 편집 권한만 부여, S3 이미지는 `products/` 읽기만 공개
+- **최소 권한**: CI용 IAM 사용자는 EKS `ksnam97` 네임스페이스 편집 권한만 부여, S3 이미지는 `products/` 읽기만 공개
 - **비밀 정보 분리**: DB 비밀번호, JWT 서명 키, 초기 관리자 비밀번호를 소스에 두지 않고 Terraform이 랜덤 생성해 쿠버네티스 시크릿(`my-app-secrets`, `jwt-secret`, `admin-secret`)으로만 전달합니다. 앱은 환경변수로 읽습니다.
 - **재현 가능한 인프라**: 클러스터 생성부터 DNS·HTTPS·앱 배포까지 코드로 재현, 삭제 후 잔여 리소스 점검 스크립트(`terraform/verify-destroy.ps1`) 제공
 - **트러블슈팅 경험**: 노드 간 보안그룹 규칙으로 인한 504, Cluster Autoscaler 버전 불일치, Let's Encrypt 발급 한도 등을 진단해 코드에 반영

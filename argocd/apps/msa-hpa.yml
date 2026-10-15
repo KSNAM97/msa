@@ -11,7 +11,7 @@ spec:
     path: msa/k8s/k8s-hpa
   destination:
     server: https://kubernetes.default.svc
-    namespace: soldesk
+    namespace: ksnam97
   syncPolicy:
     automated:
       prune: true

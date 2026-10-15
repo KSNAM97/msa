@@ -11,7 +11,7 @@ spec:
     path: msa/frontend/k8s
   destination:
     server: https://kubernetes.default.svc
-    namespace: soldesk
+    namespace: ksnam97
   syncPolicy:
     automated:
       prune: true

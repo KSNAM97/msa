@@ -26,10 +26,10 @@ module "eks" {
     ci = {
       principal_arn = "arn:aws:iam::${data.aws_caller_identity.me.account_id}:user/${var.ci_user}"
       policy_associations = {
-        # 최소 권한: CI는 soldesk 네임스페이스의 apply/rollout restart 만 필요
+        # 최소 권한: CI는 ksnam97 네임스페이스의 apply/rollout restart 만 필요
         edit = {
           policy_arn   = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
-          access_scope = { type = "namespace", namespaces = ["soldesk"] }
+          access_scope = { type = "namespace", namespaces = ["ksnam97"] }
         }
       }
     }

@@ -503,7 +503,7 @@ data:
         {
           "id": 2,
           "type": "stat",
-          "title": "실행 파드 (soldesk)",
+          "title": "실행 파드 (ksnam97)",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -546,7 +546,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "count(count by (pod) (container_memory_working_set_bytes{namespace=\"soldesk\",container!=\"\",container!=\"POD\"}))",
+              "expr": "count(count by (pod) (container_memory_working_set_bytes{namespace=\"ksnam97\",container!=\"\",container!=\"POD\"}))",
               "legendFormat": "pods"
             }
           ]
@@ -1004,7 +1004,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"soldesk\",container!=\"\",container!=\"POD\"}[2m]))",
+              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"ksnam97\",container!=\"\",container!=\"POD\"}[2m]))",
               "legendFormat": "{{pod}}"
             }
           ]
@@ -1049,7 +1049,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"soldesk\",container!=\"\",container!=\"POD\"})",
+              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"ksnam97\",container!=\"\",container!=\"POD\"})",
               "legendFormat": "{{pod}}"
             }
           ]
@@ -1094,7 +1094,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum by (pod) (rate(container_network_receive_bytes_total{namespace=\"soldesk\"}[2m]))",
+              "expr": "sum by (pod) (rate(container_network_receive_bytes_total{namespace=\"ksnam97\"}[2m]))",
               "legendFormat": "{{pod}}"
             }
           ]
@@ -1139,7 +1139,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum by (pod) (rate(container_network_transmit_bytes_total{namespace=\"soldesk\"}[2m]))",
+              "expr": "sum by (pod) (rate(container_network_transmit_bytes_total{namespace=\"ksnam97\"}[2m]))",
               "legendFormat": "{{pod}}"
             }
           ]

@@ -108,7 +108,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.gateway == 'true'
         run: |
           kubectl apply -f ./msa/apigateway/k8s/depl_svc.yml
-          kubectl rollout restart deployment apigateway-depl -n soldesk
+          kubectl rollout restart deployment apigateway-depl -n ksnam97
 
 
       # Member 빌드
@@ -128,7 +128,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.member == 'true'
         run: |
           kubectl apply -f ./msa/member/k8s/depl_svc.yml
-          kubectl rollout restart deployment member-depl -n soldesk
+          kubectl rollout restart deployment member-depl -n ksnam97
 
 
       # Ordering 빌드
@@ -148,7 +148,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.ordering == 'true'
         run: | 
           kubectl apply -f ./msa/ordering/k8s/depl_svc.yml
-          kubectl rollout restart deployment ordering-depl -n soldesk
+          kubectl rollout restart deployment ordering-depl -n ksnam97
 
 
       # Product 빌드
@@ -168,7 +168,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.product == 'true'
         run: |
           kubectl apply -f ./msa/product/k8s/depl_svc.yml
-          kubectl rollout restart deployment product-depl -n soldesk
+          kubectl rollout restart deployment product-depl -n ksnam97
 
       # Frontend 빌드
       - name: frontend build and push docker image to ecr
@@ -187,5 +187,5 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
         run: |
           kubectl apply -f ./msa/frontend/k8s/depl_svc.yml
-          kubectl rollout restart deployment frontend-depl -n soldesk
+          kubectl rollout restart deployment frontend-depl -n ksnam97
 

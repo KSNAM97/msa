@@ -76,7 +76,7 @@
       ts('요청 수 (req/s)', ['apigateway', 'member', 'product', 'ordering'], 'reqps', 1.4, 1), ts('5xx 에러 (req/s)', ['apigateway', 'member', 'product', 'ordering'], 'reqps', 0.02, 0.02),
       ts('평균 응답시간', ['apigateway', 'member', 'product', 'ordering'], 's', 0.08, 0.05), ts('JVM 힙 메모리', ['apigateway', 'member', 'product', 'ordering'], 'bytes', 160e6, 40e6)],
     'Kubernetes 클러스터': [
-      st('노드', '3', '', G), st('실행 파드 (soldesk)', '5', '', B), st('수집 대상 UP', '15', '', G), st('수집 대상 DOWN', '0', '', G), st('클러스터 CPU', '22.8%', '', G), st('클러스터 메모리', '45.1%', '', G),
+      st('노드', '3', '', G), st('실행 파드 (ksnam97)', '5', '', B), st('수집 대상 UP', '15', '', G), st('수집 대상 DOWN', '0', '', G), st('클러스터 CPU', '22.8%', '', G), st('클러스터 메모리', '45.1%', '', G),
       ts('노드 CPU 사용률', nodes, 'percent', 24, 10), ts('노드 메모리 사용률', nodes, 'percent', 46, 8),
       ts('노드 네트워크 (수신/송신)', ['수신', '송신'], 'Bps', 60e3, 30e3), ts('노드 디스크 사용률', nodes, 'percent', 31, 1),
       ts('파드 CPU (코어)', pods, '', 0.03, 0.02), ts('파드 메모리', pods, 'bytes', 260e6, 25e6)],

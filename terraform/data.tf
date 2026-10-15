@@ -117,15 +117,15 @@ resource "aws_db_instance" "this" {
 }
 
 # ---------- k8s 네임스페이스 / 시크릿 (manifest의 secretKeyRef) ----------
-resource "kubernetes_namespace" "soldesk" {
-  metadata { name = "soldesk" }
+resource "kubernetes_namespace" "ksnam97" {
+  metadata { name = "ksnam97" }
   depends_on = [module.eks]
 }
 
 resource "kubernetes_secret" "app" {
   metadata {
     name      = "my-app-secrets"
-    namespace = kubernetes_namespace.soldesk.metadata[0].name
+    namespace = kubernetes_namespace.ksnam97.metadata[0].name
   }
   data = {
     DB_HOST = aws_db_instance.this.address
@@ -136,7 +136,7 @@ resource "kubernetes_secret" "app" {
 resource "kubernetes_secret" "aws" {
   metadata {
     name      = "aws-secret"
-    namespace = kubernetes_namespace.soldesk.metadata[0].name
+    namespace = kubernetes_namespace.ksnam97.metadata[0].name
   }
   data = {
     AWS_ACCESS_KEY_ID     = aws_iam_access_key.s3.id
@@ -162,7 +162,7 @@ resource "random_password" "admin" {
 resource "kubernetes_secret" "jwt" {
   metadata {
     name      = "jwt-secret"
-    namespace = kubernetes_namespace.soldesk.metadata[0].name
+    namespace = kubernetes_namespace.ksnam97.metadata[0].name
   }
   data = {
     JWT_SECRET_KEY    = random_id.jwt_access.b64_std
@@ -174,7 +174,7 @@ resource "kubernetes_secret" "jwt" {
 resource "kubernetes_secret" "admin" {
   metadata {
     name      = "admin-secret"
-    namespace = kubernetes_namespace.soldesk.metadata[0].name
+    namespace = kubernetes_namespace.ksnam97.metadata[0].name
   }
   data = {
     ADMIN_PASSWORD = random_password.admin.result

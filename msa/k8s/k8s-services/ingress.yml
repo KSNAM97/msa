@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: order-backend-ingress
-  namespace: soldesk
+  namespace: ksnam97
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 20m
     kubernetes.io/ingress.class: nginx

@@ -14,7 +14,7 @@ resource "terraform_data" "pre_destroy" {
       # 발급된 TLS 인증서 시크릿 백업 (Let's Encrypt 발급 한도 회피, 다음 apply 때 복원)
       $d = '${self.input.backup_dir}'
       New-Item -ItemType Directory -Force $d | Out-Null
-      foreach ($s in 'argocd/argo-ksnam97-com-tls', 'monitoring/monitoring-ksnam97-com-tls', 'soldesk/server-ksnam97-com-tls', 'monitoring/db-ksnam97-com-tls') {
+      foreach ($s in 'argocd/argo-ksnam97-com-tls', 'monitoring/monitoring-ksnam97-com-tls', 'ksnam97/server-ksnam97-com-tls', 'monitoring/db-ksnam97-com-tls') {
         $ns, $n = $s -split '/'
         $j = kubectl -n $ns get secret $n -o json 2>$null
         if (-not $j) { continue }
@@ -25,11 +25,11 @@ resource "terraform_data" "pre_destroy" {
       }
       kubectl delete applications.argoproj.io --all -n argocd --timeout=60s
       kubectl delete ingress --all -A --timeout=120s
-      kubectl delete ns soldesk monitoring --ignore-not-found --timeout=180s
+      kubectl delete ns ksnam97 monitoring --ignore-not-found --timeout=180s
     EOT
   }
 
-  depends_on = [helm_release.argocd_root, kubernetes_namespace.soldesk, kubernetes_namespace.monitoring]
+  depends_on = [helm_release.argocd_root, kubernetes_namespace.ksnam97, kubernetes_namespace.monitoring]
 }
 
 # 2) ingress-nginx 삭제 후 로드밸런서가 완전히 사라질 때까지 대기 (vpc 삭제 전)
