@@ -44,6 +44,20 @@
       <div id="adminMembers">불러오는 중...</div>
     </section>
 
+    <!-- DB 보기 (읽기 전용): 1인 쇼핑몰이라 운영자가 이 화면에서 바로 데이터를 확인한다. 수정/삭제는 불가 -->
+    <section class="panel">
+      <h2>데이터베이스 (읽기 전용)</h2>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 14px">테이블을 눌러 내용을 보거나, 아래에 SELECT 쿼리를 직접 실행할 수 있습니다. 비밀번호 컬럼은 가려서 표시됩니다. 수정이 필요하면 각 관리 화면이나 DB 관리(Adminer)를 사용하세요.</p>
+      <div id="dbTables" class="admin-grid"></div>
+      <div id="dbView" style="margin-top:20px"></div>
+      <div style="margin-top:24px">
+        <label for="dbSql" style="font-size:12px;letter-spacing:.06em">SQL 조회 (SELECT / SHOW / DESCRIBE, 최대 200행)</label>
+        <textarea id="dbSql" style="margin:8px 0;min-height:80px;font-family:monospace" placeholder="예: SELECT category, COUNT(*) AS cnt FROM product GROUP BY category"></textarea>
+        <button class="btn" id="dbRun" type="button">실행</button>
+        <div id="dbQueryResult" style="margin-top:14px"></div>
+      </div>
+    </section>
+
     <section class="panel">
       <h2>쇼핑몰 관리</h2>
       <div class="admin-grid">
@@ -107,10 +121,15 @@
     setInterval(check, 30000);   // 30초마다 자동 갱신
 
     // ---- 주문 관리: 전체 주문 조회 + 취소(재고 복구). 서버가 ADMIN 권한을 검사한다 (GET /ordering/admin/all)
+    // 회원 상세 화면이 회원 목록과 주문 목록을 함께 쓰므로 한 번 받은 데이터를 보관한다
+    let allOrders = [], allMembers = [], selectedMemberId = null;
+
     async function loadAdminOrders() {
       const box = document.getElementById('adminOrders');
       try {
         const orders = await apiRequest('/ordering-service/ordering/admin/all', { method: 'GET', headers: {} });
+        allOrders = orders;
+        renderMembers();   // 회원별 주문 수/구매액에 반영
         if (!orders.length) { box.innerHTML = '<div class="empty">주문이 없습니다.</div>'; return; }
         box.innerHTML = '<table><thead><tr><th>주문번호</th><th>회원ID</th><th>상품</th><th>수량</th><th>금액</th><th>상태</th><th>주문일</th><th></th></tr></thead><tbody>' +
           orders.map(function (o) {
@@ -129,18 +148,112 @@
 
     // ---- 회원 관리: 회원 목록(비밀번호 제외). 서버가 ADMIN 권한을 검사한다 (GET /member/list)
     async function loadAdminMembers() {
-      const box = document.getElementById('adminMembers');
       try {
-        const members = await apiRequest('/member-service/member/list', { method: 'GET', headers: {} });
-        box.innerHTML = '<table><thead><tr><th>ID</th><th>이름</th><th>아이디</th><th>닉네임</th><th>이메일</th><th>권한</th><th>가입일</th></tr></thead><tbody>' +
-          members.map(function (m) {
-            return '<tr><td>' + m.id + '</td><td>' + esc(m.name) + '</td><td>' + esc(m.loginId) + '</td><td>' + esc(m.nickname) + '</td><td>' + esc(m.email) +
-              '</td><td>' + esc(m.role) + '</td><td>' + esc((m.createdTime || '').replace('T', ' ').slice(0, 10)) + '</td></tr>';
-          }).join('') + '</tbody></table>';
-      } catch (e) { box.innerHTML = '<div class="empty">회원 목록을 불러오지 못했습니다.</div>'; }
+        allMembers = await apiRequest('/member-service/member/list', { method: 'GET', headers: {} });
+        renderMembers();
+      } catch (e) { document.getElementById('adminMembers').innerHTML = '<div class="empty">회원 목록을 불러오지 못했습니다.</div>'; }
+    }
+
+    // 회원 목록 표 + 선택한 회원의 상세(정보 + 그 회원의 주문). 행을 클릭하면 아래에 상세가 열린다.
+    // 주문 수/구매액은 취소된 주문을 제외한 값이다 (클라이언트에서 전체 주문을 회원ID 로 모아서 계산)
+    function renderMembers() {
+      const box = document.getElementById('adminMembers');
+      if (!allMembers.length) return;
+      const stat = {};   // memberId -> { count, total }
+      allOrders.forEach(function (o) {
+        if (o.status !== 'ORDERED') return;
+        const s = stat[o.memberId] || (stat[o.memberId] = { count: 0, total: 0 });
+        s.count += 1; s.total += o.price * o.quantity;
+      });
+      box.innerHTML = '<table><thead><tr><th>ID</th><th>이름</th><th>아이디</th><th>닉네임</th><th>이메일</th><th>권한</th><th>가입일</th><th>주문 수</th><th>구매액</th></tr></thead><tbody>' +
+        allMembers.map(function (m) {
+          const s = stat[m.id] || { count: 0, total: 0 };
+          return '<tr data-member="' + m.id + '" style="cursor:pointer' + (m.id === selectedMemberId ? ';background:var(--gray)' : '') + '"><td>' + m.id + '</td><td>' + esc(m.name) + '</td><td>' + esc(m.loginId) + '</td><td>' + esc(m.nickname) + '</td><td>' + esc(m.email) +
+            '</td><td>' + esc(m.role) + '</td><td>' + esc((m.createdTime || '').replace('T', ' ').slice(0, 10)) + '</td><td>' + s.count + '</td><td>' + formatPrice(s.total) + '</td></tr>';
+        }).join('') + '</tbody></table><div id="memberDetail"></div>';
+      box.querySelector('tbody').onclick = function (e) {
+        const tr = e.target.closest('tr[data-member]');
+        if (!tr) return;
+        selectedMemberId = Number(tr.dataset.member);
+        renderMembers();
+      };
+      renderMemberDetail();
+    }
+
+    function renderMemberDetail() {
+      const el = document.getElementById('memberDetail');
+      const m = allMembers.find(function (x) { return x.id === selectedMemberId; });
+      if (!el || !m) return;
+      const orders = allOrders.filter(function (o) { return o.memberId === m.id; });
+      el.innerHTML = '<div style="margin-top:20px;padding:20px;border:1px solid var(--line)"><b>' + esc(m.name) + '</b> (' + esc(m.loginId) + ') · ' + esc(m.email) + ' · ' + esc(m.role) +
+        '<div style="margin-top:12px;font-size:12px;color:var(--muted)">주문 내역 ' + orders.length + '건</div>' +
+        (orders.length ? '<table><thead><tr><th>주문번호</th><th>상품</th><th>수량</th><th>금액</th><th>상태</th><th>주문일</th></tr></thead><tbody>' +
+          orders.map(function (o) {
+            return '<tr><td>' + o.id + '</td><td>' + esc(o.productName) + '</td><td>' + o.quantity + '</td><td>' + formatPrice(o.price * o.quantity) + '</td><td>' +
+              (o.status === 'ORDERED' ? '주문완료' : '취소') + '</td><td>' + esc((o.orderedAt || '').replace('T', ' ').slice(0, 16)) + '</td></tr>';
+          }).join('') + '</tbody></table>' : '<div class="empty" style="padding:24px">주문이 없습니다.</div>') + '</div>';
     }
     loadAdminOrders();
     loadAdminMembers();
+
+    // ---- 데이터베이스 보기 (읽기 전용). 서버가 ADMIN 권한과 읽기 전용을 강제한다 (/member/admin/db/*)
+    const DB = '/member-service/member/admin/db';
+
+    // 결과(columns, rows)를 표로 그린다. null 은 (null) 로, 모든 값은 이스케이프해서 출력
+    function dbTable(res) {
+      if (!res.columns.length) return '<div class="empty">결과가 없습니다.</div>';
+      return '<div style="overflow:auto"><table><thead><tr>' + res.columns.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        res.rows.map(function (r) {
+          return '<tr>' + r.map(function (v) { return '<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (v === null ? '<i style="color:var(--muted)">(null)</i>' : esc(v)) + '</td>'; }).join('') + '</tr>';
+        }).join('') + '</tbody></table></div>' +
+        '<p style="font-size:12px;color:var(--muted)">' + res.rows.length + '행' + (res.truncated ? ' (최대 행 수에서 잘림)' : '') + '</p>';
+    }
+
+    async function loadDbTables() {
+      const box = document.getElementById('dbTables');
+      try {
+        const tables = await apiRequest(DB + '/tables', { method: 'GET', headers: {} });
+        box.innerHTML = tables.map(function (t) {
+          return '<a class="tool" href="#" data-table="' + esc(t.name) + '"><b>' + esc(t.name) + '</b><span>' + t.rows + '행</span></a>';
+        }).join('');
+        box.onclick = function (e) {
+          const a = e.target.closest('a[data-table]');
+          if (!a) return;
+          e.preventDefault();
+          showDbTable(a.dataset.table, 0);
+        };
+      } catch (e) { box.innerHTML = '<div class="empty">테이블 목록을 불러오지 못했습니다.</div>'; }
+    }
+
+    // 테이블 내용(20행씩, 최신순) + 이전/다음 페이지
+    async function showDbTable(name, page) {
+      const view = document.getElementById('dbView');
+      try {
+        const res = await apiRequest(DB + '/tables/' + encodeURIComponent(name) + '?page=' + page + '&size=20', { method: 'GET', headers: {} });
+        view.innerHTML = '<b>' + esc(name) + '</b> <span style="color:var(--muted);font-size:12px">페이지 ' + (page + 1) + '</span>' + dbTable(res) +
+          '<button class="btn btn-light" type="button" data-p="' + (page - 1) + '"' + (page === 0 ? ' disabled' : '') + '>이전</button> ' +
+          '<button class="btn btn-light" type="button" data-p="' + (page + 1) + '"' + (res.rows.length < 20 ? ' disabled' : '') + '>다음</button>';
+        view.onclick = function (e) {
+          const b = e.target.closest('button[data-p]');
+          if (b && !b.disabled) showDbTable(name, Number(b.dataset.p));
+        };
+      } catch (e) { view.innerHTML = '<div class="empty">테이블을 불러오지 못했습니다.</div>'; }
+    }
+
+    // SQL 직접 조회. 서버가 SELECT 계열 한 문장만 허용하며, 오류 메시지는 그대로 보여줘서 쿼리를 고칠 수 있게 한다
+    document.getElementById('dbRun').onclick = async function () {
+      const out = document.getElementById('dbQueryResult');
+      const btn = this;
+      btn.disabled = true;
+      try {
+        const res = await apiRequest(DB + '/query', { method: 'POST', body: JSON.stringify({ sql: document.getElementById('dbSql').value }) });
+        out.innerHTML = dbTable(res);
+      } catch (e) {
+        out.innerHTML = '<div class="message error" style="display:block">' + esc((e.message || '실행하지 못했습니다.').slice(0, 300)) + '</div>';
+      }
+      btn.disabled = false;
+    };
+    loadDbTables();
   </script>
 </body>
 </html>
