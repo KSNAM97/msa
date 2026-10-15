@@ -106,8 +106,9 @@ function renderLayout() {
   // 계정 드롭다운: 로그인 여부/권한에 따라 항목이 달라진다. 상품등록은 ADMIN 에게만 노출(서버 권한 검사는 별도 과제)
   const acct = auth
     ? '<div class="who">' + esc(auth.nickname || auth.name || auth.loginId) + '님</div>' +
-      '<a href="/orders.html">주문내역</a>' + (isAdmin() ? '<a href="/admin.html">관리자</a><a href="/product-create.html">상품등록</a>' : '') +
-      '<button type="button" id="logoutBtn">로그아웃</button>'
+      '<a href="/mypage.html">내 정보</a><a href="/orders.html">주문내역</a>' + (isAdmin() ? '<a href="/admin.html">관리자</a><a href="/product-create.html">상품등록</a>' : '') +
+      '<button type="button" id="logoutBtn">로그아웃</button>' +
+      (isAdmin() ? '' : '<a href="/withdraw.html">회원탈퇴</a>')   // 관리자는 탈퇴 불가(서버도 거절)
     : '<a href="/login.html">로그인</a><a href="/signup.html">회원가입</a>';
 
   const header = document.getElementById('siteHeader');

@@ -4,13 +4,18 @@ metadata:
   name: prometheus-config
   namespace: monitoring
 data:
-# Prometheus가 node-exporter가 수집한 노드(서버)의 시스템 정보를 15초마다 데이터를 주기적으로 받아 저장하고 처리 => prometheus.yml로 저장 
-#  <노드 IP>:10250 : Prometheus가 k8s 노드를 자동 탐색할 때 사용하는 기본 주소(__address__라벨이 붙어있음). 이것을 :9100 으로 대체
+  # Prometheus 설정(prometheus.yml). 15초마다 아래 3가지 대상에서 지표를 가져와 저장한다.
+  #   1) node-exporter : 노드(서버) CPU/메모리/디스크
+  #   2) spring-services : 우리 서비스(apigateway/member/product/ordering)의 요청 수, 에러, 응답시간, JVM 메모리
+  #   3) cadvisor : 컨테이너(파드)별 CPU/메모리 사용량
+  # Grafana 는 이 Prometheus 를 데이터소스로 읽는다 (grafana-config.yml 참고)
   prometheus.yml: |
     global:
       scrape_interval: 15s
 
     scrape_configs:
+      # 1) 노드 지표: Prometheus 가 노드를 자동 탐색할 때 기본 주소는 <노드IP>:10250 이다.
+      #    node-exporter 는 노드 IP 의 9100 포트에서 동작하므로 포트만 9100 으로 바꾼다.
       - job_name: 'node-exporter'
         kubernetes_sd_configs:
           - role: node
@@ -20,3 +25,38 @@ data:
             replacement: '${1}:9100'
             target_label: __address__
 
+      # 2) 서비스 지표: soldesk 네임스페이스에서 prometheus.io/scrape: "true" 주석이 있는 파드만 수집한다
+      #    (각 서비스 depl_svc.yml 에 이미 있음. 프론트엔드는 주석이 없어 제외됨)
+      - job_name: 'spring-services'
+        metrics_path: /actuator/prometheus
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: ['soldesk']
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: 'true'
+          # 대시보드에서 서비스 이름(app)과 파드 이름(pod)으로 구분해서 볼 수 있게 라벨을 붙인다
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+
+      # 3) 컨테이너 지표(cAdvisor): 노드의 kubelet 이 제공한다. 노드에 직접 접속하는 대신
+      #    쿠버네티스 API 서버의 프록시 경로로 가져온다(서비스어카운트 토큰으로 인증, nodes/proxy 권한 필요)
+      - job_name: 'cadvisor'
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        authorization:
+          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: '(.+)'
+            target_label: __metrics_path__
+            replacement: '/api/v1/nodes/${1}/proxy/metrics/cadvisor'

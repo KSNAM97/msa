@@ -207,3 +207,36 @@ resource "kubernetes_secret" "grafana" {
     GF_SECURITY_ADMIN_PASSWORD = random_password.grafana.result
   }
 }
+
+# ---------- DB 관리 화면(Adminer, repo 의 msa/k8s/k8s-monitoring/adminer.yml)용 비밀 값 ----------
+# 접속 인증(Basic)용 비밀번호: 이 비밀번호를 알아야 db.<도메인> 화면이 열린다. (DB 자체 비밀번호와는 별개의 1차 방어)
+resource "random_password" "adminer" {
+  length  = 20
+  special = false
+}
+
+# ingress-nginx Basic 인증은 htpasswd 형식("아이디:bcrypt해시")을 auth 키에서 읽는다.
+# bcrypt() 는 호출할 때마다 해시가 달라지므로, 매번 변경으로 인식하지 않도록 data 변경은 무시한다(비밀번호가 바뀌면 resource 를 교체)
+resource "kubernetes_secret" "adminer_auth" {
+  metadata {
+    name      = "adminer-basic-auth"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+  data = {
+    auth = "admin:${bcrypt(random_password.adminer.result)}"
+  }
+  lifecycle {
+    ignore_changes = [data]
+  }
+}
+
+# Adminer 로그인 화면의 "서버" 칸에 미리 채울 RDS 주소
+resource "kubernetes_secret" "adminer_config" {
+  metadata {
+    name      = "adminer-config"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+  data = {
+    ADMINER_DEFAULT_SERVER = aws_db_instance.this.address
+  }
+}

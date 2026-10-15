@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 정보 - NAM97 MALL</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <div id="siteHeader"></div>
+  <main class="container">
+    <!-- 1) 내 정보 수정: 이름/닉네임/이메일 (아이디는 변경 불가) -->
+    <section class="form-wrap" style="margin-bottom:0">
+      <h2>내 정보</h2>
+      <form id="profileForm">
+        <div class="field"><label for="loginId">아이디 (변경 불가)</label><input id="loginId" type="text" disabled></div>
+        <div class="field"><label for="name">이름</label><input id="name" type="text" maxlength="30" required></div>
+        <div class="field"><label for="nickname">닉네임</label><input id="nickname" type="text" maxlength="30" required></div>
+        <div class="field">
+          <label for="email">이메일</label>
+          <!-- 이메일 최소 조건: 공백 없는 "아이디@도메인.최상위도메인" 형태, 100자 이하 (서버 MemberValidator 와 동일) -->
+          <input id="email" type="email" maxlength="100" required
+                 pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}"
+                 title="name@example.com 형식으로 입력해주세요">
+          <small style="color:var(--muted)">name@example.com 형식, 100자 이하</small>
+        </div>
+        <button class="btn btn-primary btn-lg" type="submit" style="width:100%">정보 저장</button>
+        <div id="profileMessage" class="message"></div>
+      </form>
+    </section>
+
+    <!-- 2) 비밀번호 변경 -->
+    <section class="form-wrap" style="margin-top:20px;margin-bottom:0">
+      <h2>비밀번호 변경</h2>
+      <form id="passwordForm">
+        <div class="field"><label for="currentPassword">현재 비밀번호</label><input id="currentPassword" type="password" required></div>
+        <div class="field">
+          <label for="newPassword">새 비밀번호</label>
+          <!-- 비밀번호 최소 조건: 8~64자, 영문+숫자 포함, 공백 불가 (서버 MemberValidator 와 동일) -->
+          <input id="newPassword" type="password" minlength="8" maxlength="64" required
+                 pattern="(?=.*[A-Za-z])(?=.*\d)\S{8,64}" title="8~64자, 영문과 숫자를 모두 포함 (공백 불가)">
+          <small style="color:var(--muted)">8~64자, 영문과 숫자를 모두 포함 (공백 불가)</small>
+        </div>
+        <div class="field"><label for="newPassword2">새 비밀번호 확인</label><input id="newPassword2" type="password" required></div>
+        <button class="btn btn-primary btn-lg" type="submit" style="width:100%">비밀번호 변경</button>
+        <div id="passwordMessage" class="message"></div>
+      </form>
+    </section>
+
+    <p style="text-align:center;margin:24px 0;font-size:12px"><a href="/withdraw.html" style="color:var(--muted);text-decoration:underline">회원탈퇴</a></p>
+  </main>
+  <div id="siteFooter"></div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    renderLayout();
+    if (guardLogin()) loadMe();
+
+    // 서버의 최신 내 정보를 불러와 입력칸을 채운다 (GET /member/me)
+    async function loadMe() {
+      try {
+        const me = await apiRequest('/member-service/member/me', { method: 'GET', headers: {} });
+        document.getElementById('loginId').value = me.loginId;
+        document.getElementById('name').value = me.name;
+        document.getElementById('nickname').value = me.nickname;
+        document.getElementById('email').value = me.email;
+      } catch (e) { showMessage('profileMessage', '내 정보를 불러오지 못했습니다.', 'error'); }
+    }
+
+    // 정보 저장 (PUT /member/me). 성공하면 이 브라우저에 저장된 로그인 정보(닉네임/이메일)도 갱신해 헤더 인사말에 바로 반영한다
+    document.getElementById('profileForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const v = function (id) { return document.getElementById(id).value.trim(); };
+      try {
+        const me = await apiRequest('/member-service/member/me', {
+          method: 'PUT', body: JSON.stringify({ name: v('name'), nickname: v('nickname'), email: v('email') })
+        });
+        const auth = getAuth(); auth.name = me.name; auth.nickname = me.nickname; auth.email = me.email; saveAuth(auth);
+        showMessage('profileMessage', '정보가 저장되었습니다.', 'success');
+      } catch (err) {
+        showMessage('profileMessage', (err.message || '저장하지 못했습니다.').slice(0, 120), 'error');   // 서버 메시지(이메일 형식/중복 등)를 그대로 표시
+      }
+    });
+
+    // 비밀번호 변경 (PUT /member/password). 새 비밀번호 확인칸이 다르면 서버에 보내지 않는다
+    document.getElementById('passwordForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const cur = document.getElementById('currentPassword').value, np = document.getElementById('newPassword').value;
+      if (np !== document.getElementById('newPassword2').value) { showMessage('passwordMessage', '새 비밀번호 확인이 일치하지 않습니다.', 'error'); return; }
+      try {
+        await apiRequest('/member-service/member/password', { method: 'PUT', body: JSON.stringify({ currentPassword: cur, newPassword: np }) });
+        e.target.reset();
+        showMessage('passwordMessage', '비밀번호가 변경되었습니다.', 'success');
+      } catch (err) {
+        showMessage('passwordMessage', (err.message || '변경하지 못했습니다.').slice(0, 120), 'error');
+      }
+    });
+  </script>
+</body>
+</html>

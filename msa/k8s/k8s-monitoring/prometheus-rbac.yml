@@ -8,8 +8,9 @@ rules:
 # apiGroups가 "" 인경우 core그룹(pods, serivce, nodes 등)
 # apps그룹은 depl, svc 등
   - apiGroups: [""]
-  # 노드에 대한 권한
-    resources: ["nodes", "nodes/metrics"]
+  # 노드에 대한 권한 (nodes/proxy: API 서버 프록시로 cAdvisor 지표를 가져올 때 필요)
+  # pods: 서비스 파드를 자동 탐색(spring-services 수집)할 때 필요
+    resources: ["nodes", "nodes/metrics", "nodes/proxy", "pods"]
   # 조회권한 : kubectl get node, kubectl get nodes, kubectl get node --watch
     verbs: ["get", "list", "watch"]
 ---

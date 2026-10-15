@@ -3,13 +3,15 @@
 #   .\show-credentials.ps1 -Only admin      쇼핑몰 관리자 비밀번호만
 #   .\show-credentials.ps1 -Only grafana    Grafana 비밀번호만
 #   .\show-credentials.ps1 -Only argocd     ArgoCD 비밀번호만
+#   .\show-credentials.ps1 -Only adminer    DB 관리 화면 접속(Basic 인증) 비밀번호만
+#   .\show-credentials.ps1 -Only db         DB(RDS) 비밀번호만
 #   .\show-credentials.ps1 -Save            전체 출력 + 저장소 루트의 password.txt 에 저장
 #       (password.txt 는 루트 .gitignore 로 git 에서 제외됨. 내 PC 에만 남는다. apply 할 때마다 -Save 로 덮어쓰기)
 # 비밀번호는 apply 때마다 랜덤으로 새로 만들어진다.
 # - 쇼핑몰 admin / Grafana: terraform output   - ArgoCD: 클러스터 시크릿(argocd-initial-admin-secret)
 # 비밀번호가 화면에 그대로 출력되므로 화면 공유/녹화 중에는 실행하지 말 것.
 param(
-  [ValidateSet('all', 'admin', 'grafana', 'argocd')][string]$Only = 'all',
+  [ValidateSet('all', 'admin', 'grafana', 'argocd', 'adminer', 'db')][string]$Only = 'all',
   [switch]$Save,
   [string]$Domain = 'ksnam97.com', [string]$Cluster = 'my-cluster', [string]$Region = 'ap-northeast-2'
 )
@@ -19,6 +21,8 @@ $ErrorActionPreference = 'Stop'
 # terraform apply 도중(credentials.tf 가 자동 호출)에는 state 가 잠겨 있어 output 을 읽을 수 없으므로,
 # 테라폼이 환경변수(TF_ADMIN_PW / TF_GRAFANA_PW)로 값을 직접 넘겨준다. 평소 수동 실행 때는 terraform output 을 읽는다
 function Get-AdminPw   { if ($env:TF_ADMIN_PW)   { return $env:TF_ADMIN_PW };   Push-Location $PSScriptRoot; try { terraform output -raw admin_password } finally { Pop-Location } }
+function Get-AdminerPw { if ($env:TF_ADMINER_PW) { return $env:TF_ADMINER_PW }; Push-Location $PSScriptRoot; try { terraform output -raw adminer_password } finally { Pop-Location } }
+function Get-DbPw      { if ($env:TF_DB_PW)      { return $env:TF_DB_PW };      Push-Location $PSScriptRoot; try { terraform output -raw db_password } finally { Pop-Location } }
 function Get-GrafanaPw { if ($env:TF_GRAFANA_PW) { return $env:TF_GRAFANA_PW }; Push-Location $PSScriptRoot; try { terraform output -raw grafana_password } finally { Pop-Location } }
 function Get-ArgoPw {
   # ArgoCD 초기 비밀번호는 base64 로 저장돼 있어 디코딩한다 (kubectl 접속 설정 후 조회)
@@ -32,12 +36,16 @@ switch ($Only) {
   'admin'   { Get-AdminPw;   return }
   'grafana' { Get-GrafanaPw; return }
   'argocd'  { Get-ArgoPw;    return }
+  'adminer' { Get-AdminerPw; return }
+  'db'      { Get-DbPw;      return }
 }
 
 $rows = @(
   [pscustomobject]@{ 서비스 = '쇼핑몰 관리자'; 주소 = "https://server.$Domain/login.html"; 아이디 = 'admin'; 비밀번호 = (Get-AdminPw) },
   [pscustomobject]@{ 서비스 = 'Grafana';       주소 = "https://grafana.$Domain";           아이디 = 'admin'; 비밀번호 = (Get-GrafanaPw) },
   [pscustomobject]@{ 서비스 = 'ArgoCD';        주소 = "https://argo.$Domain";              아이디 = 'admin'; 비밀번호 = (Get-ArgoPw) },
+  [pscustomobject]@{ 서비스 = 'DB 관리 접속(Basic 인증)'; 주소 = "https://db.$Domain";            아이디 = 'admin'; 비밀번호 = (Get-AdminerPw) },
+  [pscustomobject]@{ 서비스 = 'DB 로그인(Adminer 화면)';   주소 = '서버=RDS 주소(자동 입력)';   아이디 = 'admin'; 비밀번호 = (Get-DbPw) },
   [pscustomobject]@{ 서비스 = 'Prometheus';    주소 = "https://prometheus.$Domain";        아이디 = '(로그인 없음)'; 비밀번호 = '-' }
 )
 $rows | Format-Table -AutoSize

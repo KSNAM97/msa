@@ -107,5 +107,5 @@ resource "helm_release" "argocd_root" {
     }
   })]
   # 순서 보장: ArgoCD/ingress/cert-manager 설치 완료 + 앱이 참조할 시크릿(DB/S3) + 복원된 인증서가 먼저 준비돼야 한다
-  depends_on = [helm_release.argocd, helm_release.cert_manager, helm_release.ingress_nginx, kubernetes_secret.app, kubernetes_secret.aws, kubernetes_secret.jwt, kubernetes_secret.admin, kubernetes_secret.grafana, terraform_data.restore_certs]
+  depends_on = [helm_release.argocd, helm_release.cert_manager, helm_release.ingress_nginx, kubernetes_secret.app, kubernetes_secret.aws, kubernetes_secret.jwt, kubernetes_secret.admin, kubernetes_secret.grafana, kubernetes_secret.adminer_auth, kubernetes_secret.adminer_config, terraform_data.restore_certs]
 }

@@ -14,7 +14,7 @@ resource "terraform_data" "pre_destroy" {
       # 발급된 TLS 인증서 시크릿 백업 (Let's Encrypt 발급 한도 회피, 다음 apply 때 복원)
       $d = '${self.input.backup_dir}'
       New-Item -ItemType Directory -Force $d | Out-Null
-      foreach ($s in 'argocd/argo-ksnam97-com-tls', 'monitoring/monitoring-ksnam97-com-tls', 'soldesk/server-ksnam97-com-tls') {
+      foreach ($s in 'argocd/argo-ksnam97-com-tls', 'monitoring/monitoring-ksnam97-com-tls', 'soldesk/server-ksnam97-com-tls', 'monitoring/db-ksnam97-com-tls') {
         $ns, $n = $s -split '/'
         $j = kubectl -n $ns get secret $n -o json 2>$null
         if (-not $j) { continue }

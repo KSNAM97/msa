@@ -12,11 +12,24 @@
     <section class="form-wrap">
       <h2>회원가입</h2>
       <form id="signupForm">
-        <div class="field"><label for="name">이름</label><input id="name" type="text" required></div>
+        <div class="field"><label for="name">이름</label><input id="name" type="text" maxlength="30" required></div>
         <div class="field"><label for="loginId">아이디</label><input id="loginId" type="text" required></div>
-        <div class="field"><label for="nickname">닉네임</label><input id="nickname" type="text" required></div>
-        <div class="field"><label for="email">이메일</label><input id="email" type="email" required></div>
-        <div class="field"><label for="password">비밀번호</label><input id="password" type="password" minlength="4" required></div>
+        <div class="field"><label for="nickname">닉네임</label><input id="nickname" type="text" maxlength="30" required></div>
+        <div class="field">
+          <label for="email">이메일</label>
+          <!-- 최소 조건: 공백 없는 "아이디@도메인.최상위도메인" 형태, 100자 이하 (서버 MemberValidator 와 동일) -->
+          <input id="email" type="email" maxlength="100" required
+                 pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}"
+                 title="name@example.com 형식으로 입력해주세요">
+          <small style="color:var(--muted)">name@example.com 형식, 100자 이하</small>
+        </div>
+        <div class="field">
+          <label for="password">비밀번호</label>
+          <!-- 최소 조건: 8~64자, 영문과 숫자 포함, 공백 불가 (서버 MemberValidator 와 동일) -->
+          <input id="password" type="password" minlength="8" maxlength="64" required
+                 pattern="(?=.*[A-Za-z])(?=.*\d)\S{8,64}" title="8~64자, 영문과 숫자를 모두 포함 (공백 불가)">
+          <small style="color:var(--muted)">8~64자, 영문과 숫자를 모두 포함 (공백 불가)</small>
+        </div>
         <button class="btn btn-primary btn-lg" type="submit" style="width:100%">가입하기</button>
         <div id="signupMessage" class="message"></div>
       </form>

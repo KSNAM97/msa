@@ -5,7 +5,7 @@
 # =============================================================================
 locals {
   # repo ingress 기준 서브도메인 -> ingress-nginx NLB
-  hosts = ["server", "argo", "prometheus", "grafana"]
+  hosts = ["server", "argo", "prometheus", "grafana", "db"]
 }
 
 # 기존 호스팅 존 사용: 존의 NS/SOA/기존 레코드(A, www)는 건드리지 않고 CNAME 4개만 추가/삭제

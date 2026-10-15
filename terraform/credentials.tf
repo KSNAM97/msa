@@ -7,7 +7,7 @@
 #   - 끄려면 이 파일을 지우거나 resource 를 주석 처리. PC 에 PowerShell 과 aws/kubectl 이 있어야 ArgoCD 비밀번호까지 저장됨
 # =============================================================================
 resource "terraform_data" "save_credentials" {
-  triggers_replace = [random_password.admin.result, random_password.grafana.result]
+  triggers_replace = [random_password.admin.result, random_password.grafana.result, random_password.adminer.result, random_password.db.result]
 
   provisioner "local-exec" {
     on_failure  = continue # 저장에 실패해도 apply 자체는 실패시키지 않음 (나중에 .\show-credentials.ps1 -Save 로 수동 저장)
@@ -16,9 +16,11 @@ resource "terraform_data" "save_credentials" {
     environment = {
       TF_ADMIN_PW   = random_password.admin.result
       TF_GRAFANA_PW = random_password.grafana.result
+      TF_ADMINER_PW = random_password.adminer.result
+      TF_DB_PW      = random_password.db.result
     }
   }
 
   # 모든 구성(ArgoCD 가 뜬 뒤)이 끝난 다음에 실행: ArgoCD 초기 비밀번호 시크릿이 있어야 한다
-  depends_on = [helm_release.argocd_root, kubernetes_secret.admin, kubernetes_secret.grafana]
+  depends_on = [helm_release.argocd_root, kubernetes_secret.admin, kubernetes_secret.grafana, kubernetes_secret.adminer_auth]
 }

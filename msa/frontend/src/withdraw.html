@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원탈퇴 - NAM97 MALL</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <div id="siteHeader"></div>
+  <main class="container">
+    <section class="form-wrap">
+      <h2>회원탈퇴</h2>
+      <p style="font-size:13px;line-height:1.8;color:var(--muted)">
+        탈퇴하면 계정 정보와 장바구니가 삭제되며 되돌릴 수 없습니다.<br>
+        주문 내역은 서비스 기록으로 보관됩니다. 관리자 계정은 탈퇴할 수 없습니다.
+      </p>
+      <form id="withdrawForm">
+        <div class="field"><label for="password">현재 비밀번호 (본인 확인)</label><input id="password" type="password" required></div>
+        <div class="field"><label><input id="agree" type="checkbox" style="width:auto;margin-right:6px" required> 위 내용을 확인했고 탈퇴에 동의합니다</label></div>
+        <button class="btn btn-primary btn-lg" id="withdrawBtn" type="submit" style="width:100%">탈퇴하기</button>
+        <div id="withdrawMessage" class="message"></div>
+      </form>
+    </section>
+  </main>
+  <div id="siteFooter"></div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    renderLayout();
+    guardLogin();   // 로그인한 사용자만 접근 (서버도 토큰이 없으면 거절)
+
+    document.getElementById('withdrawForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const btn = document.getElementById('withdrawBtn');
+      if (btn.disabled) return;      // 중복 제출 방지
+      btn.disabled = true;
+      try {
+        // 1) 서버에 저장된 장바구니를 먼저 비운다 (탈퇴 후에는 토큰이 무효가 되어 비울 수 없으므로 순서가 중요)
+        await apiRequest('/ordering-service/ordering/cart', { method: 'PUT', body: '[]' });
+        // 2) 비밀번호를 확인하고 계정을 삭제한다 (틀리면 400 -> 아래 catch 로 이동)
+        await apiRequest('/member-service/member/withdraw', {
+          method: 'POST', body: JSON.stringify({ password: document.getElementById('password').value })
+        });
+        // 3) 이 브라우저에 남은 로그인/장바구니 정보를 지우고 메인으로 이동
+        clearAuth(); localStorage.removeItem('cart'); sessionStorage.removeItem('cartSynced');
+        showMessage('withdrawMessage', '탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.', 'success');
+        setTimeout(function () { window.location.href = '/'; }, 1200);
+      } catch (err) {
+        btn.disabled = false;
+        // 서버 메시지(예: 비밀번호 불일치, 관리자 계정)를 그대로 보여준다
+        showMessage('withdrawMessage', (err.message || '탈퇴에 실패했습니다.').slice(0, 120), 'error');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -23,6 +23,9 @@ spec:
           # 아래 volumnMount를 통해 저장된 prometheus.yml 파일을 read
           # 이 파일을 기반으로 node-exporter에서 시스템 정보를 수집
             - "--config.file=/etc/prometheus/prometheus.yml"
+          # 설정(ConfigMap)을 바꾼 뒤 재시작 없이 다시 읽게 하는 옵션: curl -X POST <prometheus>/-/reload
+          # (설정을 바꾸면 이 Deployment 를 한 번 재시작하거나 위 주소로 reload 를 호출한다)
+            - "--web.enable-lifecycle"
           ports:
             - containerPort: 9090
           resources:

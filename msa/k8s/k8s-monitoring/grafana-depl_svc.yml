@@ -23,6 +23,18 @@ spec:
           envFrom:
             - secretRef:
                 name: grafana-secret
+          env:
+            # 로그인하면 바로 "NAM97 MALL 개요" 대시보드가 첫 화면으로 열리게 한다
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: /var/lib/grafana/dashboards/nam97-overview.json
+          # grafana-config.yml 의 ConfigMap 3개를 Grafana 가 읽는 위치에 마운트한다 -> 시작 시 자동 등록(프로비저닝)
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
           resources:
           # 컨테이너가 사용할수 있는 리소스의 최대치
             limits:
@@ -32,6 +44,16 @@ spec:
             requests:
               cpu: "0.5"
               memory: "250Mi"
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
 ---
 apiVersion: v1
 kind: Service

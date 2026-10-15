@@ -23,6 +23,13 @@ public class JwtAuthFilter implements GlobalFilter {
         String path = exchange.getRequest().getURI().getRawPath();
         HttpMethod method = exchange.getRequest().getMethod();
 
+        // 서비스의 /actuator(내부 지표/상태) 경로는 외부에서 접근하지 못하게 막는다.
+        // Prometheus 와 쿠버네티스 probe 는 파드 IP 로 직접 호출하므로 이 필터를 거치지 않아 영향이 없다
+        if (path.contains("/actuator")) {
+            exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+            return exchange.getResponse().setComplete();
+        }
+
         if (isPublicPath(path, method)) {
             return chain.filter(exchange);
         }

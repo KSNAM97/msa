@@ -35,4 +35,16 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Role role = Role.USER;
+
+    // 내 정보 수정 (아이디/권한은 변경하지 않는다)
+    public void updateProfile(String name, String nickname, String email) {
+        this.name = name;
+        this.nickname = nickname;
+        this.email = email;
+    }
+
+    // 비밀번호 변경: 이미 암호화된 값을 받는다 (평문을 엔티티에 두지 않음)
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

@@ -1,3 +1,11 @@
 spring:
   profiles:
     default: prod
+
+# Prometheus 지표 노출: /actuator/prometheus (클러스터 내부에서 Prometheus 가 파드 IP 로 직접 수집).
+# 외부(ingress)에서는 apigateway 가 /actuator 경로를 차단하므로 인터넷에 노출되지 않는다
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus

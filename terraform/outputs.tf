@@ -17,3 +17,15 @@ output "grafana_password" {
   value     = random_password.grafana.result
   sensitive = true
 }
+
+# DB 관리 화면(db.<도메인>) 접속 인증 비밀번호 / RDS 비밀번호 확인
+#   terraform output -raw adminer_password   (Basic 인증, 아이디 admin)
+#   terraform output -raw db_password        (Adminer 로그인: 서버=RDS 주소, 사용자 admin)
+output "adminer_password" {
+  value     = random_password.adminer.result
+  sensitive = true
+}
+output "db_password" {
+  value     = random_password.db.result
+  sensitive = true
+}
