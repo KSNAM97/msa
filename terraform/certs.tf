@@ -22,5 +22,5 @@ resource "terraform_data" "restore_certs" {
     EOT
   }
 
-  depends_on = [helm_release.cert_manager, helm_release.argocd, kubernetes_namespace.soldesk]
+  depends_on = [helm_release.cert_manager, helm_release.argocd, kubernetes_namespace.soldesk, kubernetes_namespace.monitoring]
 }

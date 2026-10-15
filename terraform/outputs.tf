@@ -12,3 +12,8 @@ output "admin_password" {
   value     = random_password.admin.result
   sensitive = true
 }
+# Grafana(grafana.ksnam97.com) 관리자 비밀번호 확인: terraform output -raw grafana_password
+output "grafana_password" {
+  value     = random_password.grafana.result
+  sensitive = true
+}

@@ -31,5 +31,12 @@ public class Ordering extends BaseTimeEntity {
     @Builder.Default
     private OrderStatus orderStatus = OrderStatus.ORDERED;
 
+    // 주문 취소: 이미 취소된 주문은 다시 취소할 수 없다(재고가 이중으로 복구되는 것을 방지)
+    public void cancel() {
+        if (this.orderStatus == OrderStatus.CANCELED) {
+            throw new IllegalArgumentException("이미 취소된 주문입니다.");
+        }
+        this.orderStatus = OrderStatus.CANCELED;
+    }
 
 }

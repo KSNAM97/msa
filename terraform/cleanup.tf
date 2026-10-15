@@ -29,7 +29,7 @@ resource "terraform_data" "pre_destroy" {
     EOT
   }
 
-  depends_on = [helm_release.argocd_root, kubernetes_namespace.soldesk]
+  depends_on = [helm_release.argocd_root, kubernetes_namespace.soldesk, kubernetes_namespace.monitoring]
 }
 
 # 2) ingress-nginx 삭제 후 NLB가 완전히 사라질 때까지 대기 (vpc 삭제 전)

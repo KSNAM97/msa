@@ -14,4 +14,8 @@ public interface ProductFeign {
 
     @PutMapping("/product/updatestock")
     void updateProductStock(@RequestBody ProductUpdateStockDto productUpdateStockDto);
+
+    // 주문 취소 시 재고 복구 (product-service 의 내부 전용 엔드포인트: 게이트웨이를 거치지 않고 직접 호출)
+    @PutMapping("/product/restock")
+    void restockProduct(@RequestBody ProductUpdateStockDto productUpdateStockDto);
 }

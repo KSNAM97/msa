@@ -180,3 +180,30 @@ resource "kubernetes_secret" "admin" {
     ADMIN_PASSWORD = random_password.admin.result
   }
 }
+
+# ---------- Grafana 관리자 비밀번호 ----------
+# Grafana 이미지의 기본 계정은 admin/admin 이라 공개 주소에 그대로 두면 위험하다.
+# 랜덤 비밀번호를 만들어 시크릿(grafana-secret)으로 전달하고, 파드는 환경변수 GF_SECURITY_ADMIN_* 로 읽는다
+# (repo 의 msa/k8s/k8s-monitoring/grafana-depl_svc.yml 참고). 확인: terraform output -raw grafana_password
+resource "random_password" "grafana" {
+  length  = 20
+  special = false
+}
+
+# monitoring 네임스페이스: 원래는 ArgoCD 가 만들지만, 파드가 뜨기 전에 시크릿이 있어야 하므로 테라폼이 먼저 만든다
+# (ArgoCD 의 CreateNamespace=true 는 이미 있어도 문제없이 동작)
+resource "kubernetes_namespace" "monitoring" {
+  metadata { name = "monitoring" }
+  depends_on = [module.eks]
+}
+
+resource "kubernetes_secret" "grafana" {
+  metadata {
+    name      = "grafana-secret"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+  data = {
+    GF_SECURITY_ADMIN_USER     = "admin"
+    GF_SECURITY_ADMIN_PASSWORD = random_password.grafana.result
+  }
+}

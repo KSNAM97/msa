@@ -45,4 +45,12 @@ public class Product extends BaseTimeEntity {
         }
         this.stockQuantity = this.stockQuantity - stockQuantity;
     }
+
+    // 주문 취소 시 재고 복구 (updateStockQuantity 의 반대)
+    public void restoreStockQuantity(int quantity){
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("복구 수량은 1개 이상이어야 합니다.");
+        }
+        this.stockQuantity = this.stockQuantity + quantity;
+    }
 }

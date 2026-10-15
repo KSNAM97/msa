@@ -18,6 +18,11 @@ spec:
           image: grafana/grafana
           ports:
             - containerPort: 3000
+          # 관리자 계정/비밀번호: 기본값(admin/admin)을 쓰지 않고, 테라폼이 랜덤 생성한 시크릿 grafana-secret 에서 주입
+          # (GF_SECURITY_ADMIN_USER / GF_SECURITY_ADMIN_PASSWORD 는 Grafana 가 읽는 환경변수 이름)
+          envFrom:
+            - secretRef:
+                name: grafana-secret
           resources:
           # 컨테이너가 사용할수 있는 리소스의 최대치
             limits:

@@ -134,7 +134,11 @@ function renderLayout() {
     $('menuToggle').onclick = function () { $('catNav').classList.toggle('open'); };
     document.addEventListener('click', function () { $('acctMenu').classList.remove('open'); });
     const logout = $('logoutBtn');
-    if (logout) logout.onclick = function () { clearAuth(); window.location.href = '/'; };
+    // 로그아웃: 이 브라우저에 남은 장바구니도 지운다(서버에는 저장돼 있어서 다시 로그인하면 복원됨. 공용 PC 에서 다른 사람에게 보이지 않게)
+    if (logout) logout.onclick = function () {
+      clearAuth(); localStorage.removeItem('cart'); sessionStorage.removeItem('cartSynced');
+      window.location.href = '/';
+    };
 
     // 카테고리 메뉴: 상품의 category 값으로 자동 생성 (별도 카테고리 API 없이 동작). 실패해도 ALL 만 보이고 화면은 정상
     getProducts().then(function (products) {
@@ -157,6 +161,7 @@ function renderLayout() {
       '</div>© NAM97 MALL. All rights reserved.</div></footer>';
   }
   initToTop();
+  syncCartFromServer();   // 로그인 상태면 서버 장바구니와 합친다 (비동기, 화면 렌더링을 막지 않음)
 }
 
 // 스크롤을 내리면 나타나는 "맨위로" 버튼
@@ -171,7 +176,45 @@ function initToTop() {
 /* ---------- 4) 장바구니 (서버 API 가 없으므로 브라우저 localStorage 에 보관) ---------- */
 // ponytail: 기기/브라우저 단위 장바구니. 로그인 계정과 동기화하려면 cart 서비스 추가 필요
 function getCart() { try { return JSON.parse(localStorage.getItem('cart')) || []; } catch (e) { return []; } }
-function saveCart(cart) { localStorage.setItem('cart', JSON.stringify(cart)); updateCartBadge(); }
+// 저장: 브라우저(localStorage)에 즉시 반영하고, 로그인 상태면 서버에도 보낸다(기기를 바꿔도 장바구니가 유지되도록)
+function saveCart(cart) { localStorage.setItem('cart', JSON.stringify(cart)); updateCartBadge(); pushCartToServer(cart); }
+
+// 서버에는 상품 ID 와 수량만 저장한다(이름/가격은 화면이 상품 목록에서 채우므로 가격이 바뀌어도 최신으로 보인다).
+// 실패해도 화면 동작에는 영향이 없다(localStorage 가 기준). keepalive: 페이지를 바로 이동해도 요청이 끝까지 전송됨
+function pushCartToServer(cart) {
+  if (!getToken()) return;
+  apiRequest('/ordering-service/ordering/cart', {
+    method: 'PUT', keepalive: true,
+    body: JSON.stringify(cart.map(function (i) { return { productId: i.id, quantity: i.qty }; }))
+  }).catch(function () {});
+}
+
+// 로그인 상태에서 페이지를 열 때 한 번(탭당) 서버 장바구니를 가져와 로컬과 합친다.
+// 합치기 규칙: 같은 상품은 수량이 큰 쪽을 사용 / 삭제됐거나 품절인 상품은 제외 / 수량은 재고를 넘지 않게 제한
+async function syncCartFromServer() {
+  const token = getToken();
+  if (!token || sessionStorage.getItem('cartSynced') === token.slice(-16)) return;
+  try {
+    const results = await Promise.all([
+      apiRequest('/ordering-service/ordering/cart', { method: 'GET', headers: {} }),
+      getProducts()
+    ]);
+    const server = results[0], byId = {};
+    results[1].forEach(function (p) { byId[p.id] = p; });
+    const qtyById = {};
+    getCart().forEach(function (i) { qtyById[i.id] = i.qty; });                       // 로그인 전에 담은 것
+    server.forEach(function (s) { qtyById[s.productId] = Math.max(qtyById[s.productId] || 0, s.quantity); });
+    const merged = Object.keys(qtyById).map(function (id) {
+      const p = byId[id];
+      return p && p.stockQuantity > 0
+        ? { id: p.id, name: p.name, price: p.price, imageUrl: p.imageUrl, stock: p.stockQuantity, qty: Math.min(qtyById[id], p.stockQuantity) }
+        : null;
+    }).filter(Boolean);
+    saveCart(merged);
+    sessionStorage.setItem('cartSynced', token.slice(-16));
+    renderCartPage();   // 장바구니 페이지가 열려 있으면 합쳐진 내용으로 다시 그린다
+  } catch (e) { /* 동기화 실패 시 로컬 장바구니를 그대로 사용 */ }
+}
 function cartTotalQty() { return getCart().reduce(function (s, i) { return s + i.qty; }, 0); }
 function updateCartBadge() { const el = document.getElementById('cartCount'); if (el) el.textContent = cartTotalQty(); }
 
@@ -386,6 +429,20 @@ async function loadProductDetail() {
 }
 
 /* ---------- 6) 주문내역 (백엔드 GET /ordering/my) ---------- */
+
+// 주문 취소 (본인 또는 관리자). 성공하면 재고가 복구되고 onDone 콜백으로 목록을 새로 그린다
+async function cancelOrder(orderId, onDone) {
+  if (!confirm('이 주문을 취소할까요? 재고가 복구되며 되돌릴 수 없습니다.')) return;
+  try {
+    await apiRequest('/ordering-service/ordering/' + orderId + '/cancel', { method: 'POST', headers: {} });
+    _productsPromise = null;   // 재고가 바뀌었으므로 상품 목록 캐시를 비운다
+    toast('주문을 취소했습니다.');
+    if (onDone) onDone();
+  } catch (e) {
+    toast('취소하지 못했습니다. 이미 취소됐거나 권한이 없는 주문입니다.');
+  }
+}
+
 async function loadOrders() {
   const box = document.getElementById('orderBox');
   if (!box || !guardLogin()) return;
@@ -393,12 +450,18 @@ async function loadOrders() {
   try {
     const orders = await apiRequest('/ordering-service/ordering/my', { method: 'GET', headers: {} });
     if (!orders.length) { box.innerHTML = '<div class="empty">주문 내역이 없습니다.</div>'; return; }
-    box.innerHTML = '<table><thead><tr><th></th><th>상품</th><th>수량</th><th>금액</th><th>상태</th><th>주문일</th></tr></thead><tbody>' +
+    box.innerHTML = '<table><thead><tr><th></th><th>상품</th><th>수량</th><th>금액</th><th>상태</th><th>주문일</th><th></th></tr></thead><tbody>' +
       orders.map(function (o) {
         return '<tr><td><img src="' + esc(getImageUrl(o.imageUrl)) + '" alt=""></td><td>' + esc(o.productName) + '</td><td>' + o.quantity + '</td>' +
           '<td>' + formatPrice(o.price * o.quantity) + '</td><td><span class="status ' + esc(o.status) + '">' + (o.status === 'ORDERED' ? '주문완료' : '취소') + '</span></td>' +
-          '<td>' + esc((o.orderedAt || '').replace('T', ' ').slice(0, 16)) + '</td></tr>';
+          '<td>' + esc((o.orderedAt || '').replace('T', ' ').slice(0, 16)) + '</td>' +
+          // 주문완료 상태에서만 취소 버튼 노출 (서버도 본인 주문/이미 취소된 주문을 검사한다)
+          '<td>' + (o.status === 'ORDERED' ? '<button class="btn btn-light" type="button" data-cancel="' + o.id + '">주문 취소</button>' : '') + '</td></tr>';
       }).join('') + '</tbody></table>';
+    box.onclick = function (e) {
+      const b = e.target.closest('button[data-cancel]');
+      if (b) cancelOrder(Number(b.dataset.cancel), loadOrders);
+    };
   } catch (e) {
     box.innerHTML = '<div class="empty">주문 내역을 불러오지 못했습니다.</div>';
   }

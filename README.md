@@ -97,13 +97,34 @@ terraform apply
 - 삭제: `terraform destroy` (ArgoCD가 만든 리소스/로드밸런서까지 정리하도록 destroy 훅 포함)
 - HTTPS 인증서는 destroy 시 백업하고 다음 apply에서 복원해 Let's Encrypt 발급 한도를 피합니다.
 
-### 관리자 계정
+### 접속 주소와 관리자 계정 확인
 
-초기 관리자(`admin`)의 비밀번호는 apply 때 랜덤으로 만들어지며 소스에 없습니다. 배포 후 아래로 확인합니다.
+쇼핑몰 `admin`, Grafana, ArgoCD의 비밀번호는 소스에 없고 apply 때마다 랜덤으로 만들어집니다. apply가 끝난 뒤 아래 스크립트 하나로 주소와 계정을 모두 확인합니다.
 
-```bash
-terraform output -raw admin_password
+```powershell
+cd terraform
+.\show-credentials.ps1
 ```
+
+| 서비스 | 주소 | 비밀번호 확인 명령 (모두 아이디 `admin`) |
+|---|---|---|
+| 쇼핑몰 관리자 | `https://server.<도메인>/login.html` | `.\show-credentials.ps1 -Only admin` |
+| Grafana | `https://grafana.<도메인>` | `.\show-credentials.ps1 -Only grafana` |
+| ArgoCD | `https://argo.<도메인>` | `.\show-credentials.ps1 -Only argocd` |
+| Prometheus | `https://prometheus.<도메인>` | 로그인 없음 (아래 한계 참고) |
+
+`terraform apply`가 끝나면 이 정보가 리포 루트의 `password.txt`에 **자동으로 저장**됩니다(`credentials.tf`). 이 파일은 `.gitignore`로 git에서 제외되어 내 PC에만 남습니다. 수동으로 다시 저장하려면 `.\show-credentials.ps1 -Save`를 실행합니다.
+
+스크립트 없이 직접 확인하려면 다음과 같습니다.
+
+```powershell
+terraform output -raw admin_password       # 쇼핑몰 관리자
+terraform output -raw grafana_password     # Grafana
+# ArgoCD (클러스터 시크릿을 디코딩)
+[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String((kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}')))
+```
+
+쇼핑몰에 `admin`으로 로그인하면 계정 메뉴의 **관리자** 페이지에서 서비스 상태를 보고 Grafana/Prometheus/ArgoCD/CloudWatch로 이동할 수 있습니다.
 
 ### 생성·삭제 알림 (선택)
 
@@ -128,6 +149,7 @@ EKS/RDS/VPC/NAT/로드밸런서/ECR/S3의 생성·삭제가 CloudTrail → Event
 
 - 장바구니는 브라우저 `localStorage`에 저장(서버 동기화 없음)
 - 주문 취소, 관리자 주문/회원 관리 화면 미구현
+- Prometheus는 로그인 없이 공개되어 있습니다(Ingress Basic 인증 또는 IP 제한 필요)
 - Terraform state에 비밀 값(DB 비밀번호, JWT 키, S3 키)이 평문으로 들어가므로 로컬 state를 쓰는 지금은 git에서 제외(`.gitignore`)합니다. 팀 운영 시에는 암호화된 원격 backend(S3 + DynamoDB lock)로 옮겨야 합니다.
 - 단일 NAT·단일 AZ RDS·자동 백업 off 등 비용 최소화(샌드박스) 설정
 

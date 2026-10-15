@@ -48,4 +48,11 @@ public class MemberService {
 
         return member;
     }
+
+    // 관리자용 회원 목록(최신 가입순). 비밀번호가 없는 DTO 로 변환해서 반환한다
+    @Transactional(readOnly = true)
+    public java.util.List<com.example.ordersystem.member.dto.MemberResDto> findAllMembers(){
+        return memberRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"))
+                .stream().map(com.example.ordersystem.member.dto.MemberResDto::from).toList();
+    }
 }

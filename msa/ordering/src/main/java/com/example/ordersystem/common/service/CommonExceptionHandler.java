@@ -28,4 +28,10 @@ public class CommonExceptionHandler {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    // 권한 없음(예: 다른 사람의 주문 취소 시도) -> 403
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<?> forbidden(SecurityException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
 }

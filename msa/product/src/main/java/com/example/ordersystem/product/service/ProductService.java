@@ -62,6 +62,17 @@ public class ProductService {
         return product;
     }
 
+    // 주문 취소에 따른 재고 복구. ordering-service 만 내부 호출한다(컨트롤러에서 게이트웨이 경유 요청은 차단)
+    public Product restockQuantity(ProductUpdateStockDto dto){
+        Product product = productRepository.findById(dto.getProductId())
+                .orElseThrow(() -> new EntityNotFoundException("없는 상품입니다."));
+        if (dto.getProductQuantity() == null) {
+            throw new IllegalArgumentException("복구 수량이 없습니다.");
+        }
+        product.restoreStockQuantity(dto.getProductQuantity());
+        return product;
+    }
+
     // 상품 삭제. 없는 id 면 EntityNotFoundException.
     // 이미 이 상품으로 주문한 내역은 유지되고, 주문내역 화면에는 "(삭제된 상품)"으로 표시된다.
     // ponytail: S3 에 올라간 이미지 파일은 지우지 않는다(고아 파일). 필요하면 S3Service 에 delete 추가

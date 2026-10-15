@@ -35,6 +35,16 @@
     </section>
 
     <section class="panel">
+      <h2>주문 관리</h2>
+      <div id="adminOrders">불러오는 중...</div>
+    </section>
+
+    <section class="panel">
+      <h2>회원 관리</h2>
+      <div id="adminMembers">불러오는 중...</div>
+    </section>
+
+    <section class="panel">
       <h2>쇼핑몰 관리</h2>
       <div class="admin-grid">
         <a class="tool" href="/product-create.html"><b>상품 등록</b><span>새 상품과 이미지를 등록합니다</span></a>
@@ -94,6 +104,42 @@
     document.getElementById('refreshBtn').onclick = check;
     check();
     setInterval(check, 30000);   // 30초마다 자동 갱신
+
+    // ---- 주문 관리: 전체 주문 조회 + 취소(재고 복구). 서버가 ADMIN 권한을 검사한다 (GET /ordering/admin/all)
+    async function loadAdminOrders() {
+      const box = document.getElementById('adminOrders');
+      try {
+        const orders = await apiRequest('/ordering-service/ordering/admin/all', { method: 'GET', headers: {} });
+        if (!orders.length) { box.innerHTML = '<div class="empty">주문이 없습니다.</div>'; return; }
+        box.innerHTML = '<table><thead><tr><th>주문번호</th><th>회원ID</th><th>상품</th><th>수량</th><th>금액</th><th>상태</th><th>주문일</th><th></th></tr></thead><tbody>' +
+          orders.map(function (o) {
+            return '<tr><td>' + o.id + '</td><td>' + o.memberId + '</td><td>' + esc(o.productName) + '</td><td>' + o.quantity + '</td>' +
+              '<td>' + formatPrice(o.price * o.quantity) + '</td>' +
+              '<td><span class="status ' + esc(o.status) + '">' + (o.status === 'ORDERED' ? '주문완료' : '취소') + '</span></td>' +
+              '<td>' + esc((o.orderedAt || '').replace('T', ' ').slice(0, 16)) + '</td>' +
+              '<td>' + (o.status === 'ORDERED' ? '<button class="btn btn-light" type="button" data-cancel="' + o.id + '">취소</button>' : '') + '</td></tr>';
+          }).join('') + '</tbody></table>';
+        box.onclick = function (e) {
+          const b = e.target.closest('button[data-cancel]');
+          if (b) cancelOrder(Number(b.dataset.cancel), loadAdminOrders);
+        };
+      } catch (e) { box.innerHTML = '<div class="empty">주문 목록을 불러오지 못했습니다.</div>'; }
+    }
+
+    // ---- 회원 관리: 회원 목록(비밀번호 제외). 서버가 ADMIN 권한을 검사한다 (GET /member/list)
+    async function loadAdminMembers() {
+      const box = document.getElementById('adminMembers');
+      try {
+        const members = await apiRequest('/member-service/member/list', { method: 'GET', headers: {} });
+        box.innerHTML = '<table><thead><tr><th>ID</th><th>이름</th><th>아이디</th><th>닉네임</th><th>이메일</th><th>권한</th><th>가입일</th></tr></thead><tbody>' +
+          members.map(function (m) {
+            return '<tr><td>' + m.id + '</td><td>' + esc(m.name) + '</td><td>' + esc(m.loginId) + '</td><td>' + esc(m.nickname) + '</td><td>' + esc(m.email) +
+              '</td><td>' + esc(m.role) + '</td><td>' + esc((m.createdTime || '').replace('T', ' ').slice(0, 10)) + '</td></tr>';
+          }).join('') + '</tbody></table>';
+      } catch (e) { box.innerHTML = '<div class="empty">회원 목록을 불러오지 못했습니다.</div>'; }
+    }
+    loadAdminOrders();
+    loadAdminMembers();
   </script>
 </body>
 </html>

@@ -40,6 +40,15 @@ public class MemberController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    // 관리자: 회원 목록 조회. X-User-Role 은 게이트웨이가 JWT 의 role 로 넣어 주는 값이라 클라이언트가 위조할 수 없다
+    @GetMapping("/list")
+    public ResponseEntity<?> memberList(@RequestHeader(value = "X-User-Role", required = false) String role){
+        if (!"ROLE_ADMIN".equals(role)) {
+            return new ResponseEntity<>("관리자만 조회할 수 있습니다.", HttpStatus.FORBIDDEN);
+        }
+        return new ResponseEntity<>(memberService.findAllMembers(), HttpStatus.OK);
+    }
+
     @PostMapping("/doLogin")
     public ResponseEntity<?> doLogin(@RequestBody LoginDto dto){
         Member member = memberService.login(dto);

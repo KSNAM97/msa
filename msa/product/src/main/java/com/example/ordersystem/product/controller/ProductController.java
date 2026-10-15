@@ -47,6 +47,19 @@ public class ProductController {
         return new ResponseEntity<>(product.getId(), HttpStatus.OK);
     }
 
+    // 재고 복구 (주문 취소용, 내부 전용).
+    // 게이트웨이를 거친 요청은 항상 X-User-Role 헤더가 붙는다(토큰 없는 요청은 게이트웨이가 401 로 차단).
+    // ordering-service 는 쿠버네티스 Service DNS 로 직접 호출하므로 이 헤더가 없다 -> 헤더가 있으면 외부 요청이므로 거절한다.
+    @PutMapping("/restock")
+    public ResponseEntity<?> restock(@RequestBody ProductUpdateStockDto dto,
+                                     @RequestHeader(value = "X-User-Role", required = false) String role){
+        if (role != null) {
+            return new ResponseEntity<>("내부 호출 전용입니다.", HttpStatus.FORBIDDEN);
+        }
+        Product product = productService.restockQuantity(dto);
+        return new ResponseEntity<>(product.getId(), HttpStatus.OK);
+    }
+
     // 상품 삭제 (관리자 전용). 서버에서 직접 권한을 검사한다: 화면에서 버튼을 숨기는 것만으로는 API 직접 호출을 막을 수 없기 때문.
     // X-User-Role 은 apigateway(JwtAuthFilter)가 JWT 의 role 을 "ROLE_ADMIN" 형태로 넣어 주는 헤더 (클라이언트가 보낸 값은 게이트웨이가 덮어쓴다)
     @DeleteMapping("/{id}")
