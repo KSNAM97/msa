@@ -71,7 +71,7 @@ cd terraform
 | 관리자 콘솔 | 로그인 후 계정 메뉴 → **관리자** | |
 | ArgoCD · Grafana | `https://argo.` · `https://grafana.ksnam97.com` | `admin` |
 | DB 관리 | `https://db.ksnam97.com` | Basic 인증 → Adminer 로그인(서버는 자동 입력) |
-| Prometheus | `https://prometheus.ksnam97.com` | 로그인 없음 |
+| Prometheus | `https://prometheus.ksnam97.com` | Basic 인증 (Adminer 와 같은 계정) |
 
 ## 5. 코드를 고치고 배포하기
 

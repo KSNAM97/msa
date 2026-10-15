@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+# 보안: 이 워크플로의 GITHUB_TOKEN 은 코드 읽기만 가능 (쓰기 권한 불필요)
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest   # GitHub가 제공하는 Ubuntu 가상머신에서 실행

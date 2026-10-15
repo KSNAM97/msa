@@ -16,6 +16,7 @@ AWS EKS 위에서 운영되는 **마이크로서비스(MSA) 쇼핑몰**입니다
 | [함수/API 참고](docs/REFERENCE.md) | API 목록과 권한, 서비스 메서드, 프론트 함수, 테라폼 변수, 스크립트 |
 | [구성과 주요 스택](docs/ARCHITECTURE.md) | 전체 구성도, 서비스/API, 기술 스택, Terraform 구성, 배포 흐름, 보안 설계 |
 | [문제 해결 기록](docs/TROUBLESHOOTING.md) | 겪은 문제를 증상 · 원인 · 해결로 정리 |
+| [보안 점검과 조치](docs/SECURITY.md) | 점검한 취약점, 적용한 보안 설정, 남은 항목과 이유 |
 | [롤백](docs/ROLLBACK.md) | 코드 · 매니페스트 · 인프라를 이전 상태로 되돌리는 방법 |
 | [실습 결과와 한계](docs/RESULTS.md) | 확인한 결과 표와 실습용 구성의 한계 |
 | [디자인 가이드](docs/DESIGN.md) | 디자인 원칙, 스타일 토큰, 레이아웃, 페이지 구성, 사용자 흐름, 입력 규칙, 관리자/Grafana 화면 |
@@ -128,7 +129,7 @@ cd terraform
 | 쇼핑몰 관리자 | `https://server.<도메인>/login.html` | `.\show-credentials.ps1 -Only admin` |
 | Grafana | `https://grafana.<도메인>` | `.\show-credentials.ps1 -Only grafana` |
 | ArgoCD | `https://argo.<도메인>` | `.\show-credentials.ps1 -Only argocd` |
-| Prometheus | `https://prometheus.<도메인>` | 로그인 없음 (아래 한계 참고) |
+| Prometheus | `https://prometheus.<도메인>` | Basic 인증 (Adminer 와 같은 계정, `terraform/show-credentials.ps1`) |
 
 `terraform apply`가 끝나면 이 정보가 리포 루트의 `password.txt`에 **자동으로 저장**됩니다(`credentials.tf`). 이 파일은 `.gitignore`로 git에서 제외되어 내 PC에만 남습니다. 수동으로 다시 저장하려면 `.\show-credentials.ps1 -Save`를 실행합니다.
 
@@ -166,7 +167,7 @@ EKS/RDS/VPC/NAT/로드밸런서/ECR/S3의 생성·삭제가 CloudTrail → Event
 
 - 탈퇴한 회원의 로그인 토큰은 만료 시각까지 유효합니다(JWT가 서버 상태를 저장하지 않는 방식). 블랙리스트나 토큰 짧은 만료 + 리프레시로 보완할 수 있습니다.
 - 주문 취소는 서비스 간 분산 트랜잭션이 아니어서 극단적인 장애 시 재고 불일치 가능성이 있습니다(사가/아웃박스 패턴으로 개선 가능).
-- Prometheus는 로그인 없이 공개되어 있습니다(Ingress Basic 인증 또는 IP 제한 필요)
+- Prometheus 는 자체 로그인이 없어 Ingress Basic 인증으로 보호합니다(IP 제한까지 하려면 별도 설정 필요)
 - Terraform state에는 비밀 값(DB 비밀번호, JWT 키 등)이 들어 있어 S3 원격 backend(암호화, 버전 관리, 공개 차단, HTTPS 전용, 네이티브 잠금)에 저장합니다. 다만 단일 AWS 계정/단일 사용자 기준이며, 팀 운영 시에는 접근 권한(IAM) 분리와 KMS 키 암호화를 추가하는 것이 좋습니다.
 - 단일 NAT·단일 AZ RDS·자동 백업 off 등 비용 최소화(샌드박스) 설정
 

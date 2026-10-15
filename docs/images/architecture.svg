@@ -126,6 +126,6 @@
 <text x="1023.0" y="742.0" font-size="13" font-weight="700" fill="#1F2937" text-anchor="middle">ArgoCD</text>
 <text x="1023.0" y="758.0" font-size="10.5" font-weight="400" fill="#4B5563" text-anchor="middle">Git 매니페스트 동기화</text>
 <text x="34" y="822" font-size="11.5" font-weight="400" fill="#4B5563" text-anchor="start">Terraform: apply 한 번으로 VPC · EKS · RDS · S3 · ECR · DNS · 모니터링 생성, destroy 로 전부 삭제 (인증서는 백업 후 복원)</text>
-<text x="34" y="842" font-size="11.5" font-weight="400" fill="#4B5563" text-anchor="start">실습 범위: NAT 1개 · RDS Single-AZ · 파드 1개 기반 (HPA 로 확장) · Prometheus 로그인 없음</text>
+<text x="34" y="842" font-size="11.5" font-weight="400" fill="#4B5563" text-anchor="start">실습 범위: NAT 1개 · RDS Single-AZ · 파드 1개 기반 (HPA 로 확장) · Prometheus 는 Basic 인증</text>
 <text x="34" y="862" font-size="11.5" font-weight="400" fill="#6B7280" text-anchor="start">실선: 서비스·배포 흐름   점선: DNS · 알림 연계</text>
 </svg>
